@@ -1,13 +1,13 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "github.mishkis.twodimensional.mixin",
+  "package": "github.fonvind.immersive2d.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "github.fonvind.immersive2D.mixin.EntityMixin",
-    "github.fonvind.immersive2D.mixin.PlayerEntityMixin",
-    "github.fonvind.immersive2D.mixin.ServerPlayerEntityMixin",
-    "github.fonvind.immersive2D.mixin.ServerPlayNetworkHandlerMixin"
+    "EntityMixin",
+    "PlayerEntityMixin",
+    "ServerPlayerEntityMixin",
+    "ServerPlayNetworkHandlerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -11,10 +11,10 @@
   "environment": "*",
   "entrypoints": {
     "client": [
-      "github.fonvind.immersive2D.client.Immersive2DClient"
+      "github.fonvind.immersive2d.client.Immersive2DClient"
     ],
     "main": [
-      "github.fonvind.immersive2D.Immersive2D"
+      "github.fonvind.immersive2d.Immersive2D"
     ]
   },
   "mixins": [

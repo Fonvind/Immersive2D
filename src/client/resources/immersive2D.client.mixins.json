@@ -1,0 +1,28 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "github.mishkis.twodimensional.client.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "github.fonvind.immersive2D.client.mixin.AbstractBlockStateMixin",
+    "github.fonvind.immersive2D.client.mixin.BlockMixin",
+    "github.fonvind.immersive2D.client.mixin.CameraMixin",
+    "github.fonvind.immersive2D.client.mixin.ClientPlayerEntityMixin",
+    "github.fonvind.immersive2D.client.mixin.ClientPlayerInteractionManagerMixin",
+    "github.fonvind.immersive2D.client.mixin.EntityMixin",
+    "github.fonvind.immersive2D.client.mixin.FluidRendererMixin",
+    "github.fonvind.immersive2D.client.mixin.GameOptionsMixin",
+    "github.fonvind.immersive2D.client.mixin.InputMixin",
+    "github.fonvind.immersive2D.client.mixin.MouseMixin",
+    "github.fonvind.immersive2D.client.mixin.TerrainRenderContextMixin",
+    "github.fonvind.immersive2D.client.mixin.WorldRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  },
+  "mixins": [
+  ]
+}

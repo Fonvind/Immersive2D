@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "immersive2D",
+  "version": "${version}",
+  "name": "Immersive 2D",
+  "description": "A deep 2D experience",
+  "authors": ["Fønvind"],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/twodimensional/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "github.fonvind.immersive2D.client.Immersive2DClient"
+    ],
+    "main": [
+      "github.fonvind.immersive2D.Immersive2D"
+    ]
+  },
+  "mixins": [
+    "immersive2D.mixins.json",
+    {
+      "config": "immersive2D.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "github.fonvind.immersive2d.client.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "AbstractBlockStateMixin",
+    "BlockMixin",
+    "CameraMixin",
+    "ClientPlayerEntityMixin",
+    "ClientPlayerInteractionManagerMixin",
+    "EntityMixin",
+    "FluidRendererMixin",
+    "GameOptionsMixin",
+    "InputMixin",
+    "MouseMixin",
+    "TerrainRenderContextMixin",
+    "WorldRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  },
+  "mixins": [
+  ]
+}

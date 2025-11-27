@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "id": "immersive2D",
+  "id": "immersive2d",
   "version": "${version}",
   "name": "Immersive 2D",
   "description": "A deep 2D experience",
-  "authors": ["Fønvind"],
+  "authors": ["Fonvind"],
   "contact": {},
   "license": "MIT",
-  "icon": "assets/twodimensional/icon.png",
+  "icon": "assets/immersive2d/icon.png",
   "environment": "*",
   "entrypoints": {
     "client": [
@@ -18,9 +18,9 @@
     ]
   },
   "mixins": [
-    "immersive2D.mixins.json",
+    "immersive2d.mixins.json",
     {
-      "config": "immersive2D.client.mixins.json",
+      "config": "immersive2d.client.mixins.json",
       "environment": "client"
     }
   ],

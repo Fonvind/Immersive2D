@@ -13,7 +13,6 @@ import net.minecraft.util.math.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
@@ -42,8 +41,13 @@ public class WorldRendererMixin {
         }
     }
 
-    @ModifyVariable(method = "collectRenderableChunks", at = @At("HEAD"), argsOnly = true)
-    private boolean disableChunkCulling(boolean value) {
-        return value && Immersive2DClient.plane == null;
-    }
+    // This mixin is incompatible with Sodium. It is disabled to allow the game to launch.
+    // A more robust solution is needed for Sodium compatibility.
+//    @ModifyExpressionValue(method = "setup", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Frustum;isVisible(Lnet/minecraft/util/math/Box;)Z"))
+//    private boolean disableChunkCulling(boolean original) {
+//        if (Immersive2DClient.plane != null) {
+//            return true;
+//        }
+//        return original;
+//    }
 }

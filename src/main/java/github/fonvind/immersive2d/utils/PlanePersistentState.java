@@ -3,7 +3,9 @@ package github.fonvind.immersive2d.utils;
 import github.fonvind.immersive2d.Immersive2D;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.PersistentState;
 import net.minecraft.world.PersistentStateManager;
@@ -14,10 +16,10 @@ import java.util.HashMap;
 import java.util.UUID;
 
 public class PlanePersistentState extends PersistentState {
-    private HashMap<UUID, Plane> players = new HashMap<>();
+    private final HashMap<UUID, Plane> players = new HashMap<>();
 
     @Override
-    public NbtCompound writeNbt(NbtCompound nbt) {
+    public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
         NbtCompound playersNbt = new NbtCompound();
         players.forEach(((uuid, plane) -> {
             NbtCompound playerNbt = new NbtCompound();
@@ -35,7 +37,7 @@ public class PlanePersistentState extends PersistentState {
         return nbt;
     }
 
-    public static PlanePersistentState createFromNbt(NbtCompound nbt) {
+    public static PlanePersistentState createFromNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
         PlanePersistentState state = new PlanePersistentState();
 
         NbtCompound playersNbt = nbt.getCompound("players");
@@ -51,16 +53,21 @@ public class PlanePersistentState extends PersistentState {
         return state;
     }
 
-    public static PlanePersistentState createNew() {
-        PlanePersistentState state = new PlanePersistentState();
-        state.players = new HashMap<>();
-        return state;
-    }
+    private static final Type<PlanePersistentState> type = new Type<>(
+            PlanePersistentState::new,
+            PlanePersistentState::createFromNbt,
+            null
+    );
 
     public static PlanePersistentState getServerState(MinecraftServer server) {
-        PersistentStateManager persistentStateManager = server.getWorld(World.OVERWORLD).getPersistentStateManager();
+        ServerWorld overworld = server.getWorld(World.OVERWORLD);
+        //noinspection ConstantConditions
+        if (overworld == null) {
+            throw new IllegalStateException("Overworld not found!");
+        }
+        PersistentStateManager persistentStateManager = overworld.getPersistentStateManager();
 
-        PlanePersistentState state = persistentStateManager.getOrCreate(PlanePersistentState::createFromNbt, PlanePersistentState::createNew, Immersive2D.MOD_ID);
+        PlanePersistentState state = persistentStateManager.getOrCreate(type, Immersive2D.MOD_ID);
 
         state.markDirty();
 
@@ -69,20 +76,34 @@ public class PlanePersistentState extends PersistentState {
 
     @Nullable
     public static Plane getPlayerPlane(PlayerEntity player) {
-        PlanePersistentState serverState = getServerState(player.getWorld().getServer());
+        MinecraftServer server = player.getServer();
+        if (server == null) {
+            return null;
+        }
+        PlanePersistentState serverState = getServerState(server);
 
         return serverState.players.get(player.getUuid());
     }
 
     public static void setPlayerPlane(PlayerEntity player, double x, double z, double yaw) {
-        PlanePersistentState serverState = getServerState(player.getWorld().getServer());
+        MinecraftServer server = player.getServer();
+        if (server == null) {
+            return;
+        }
+        PlanePersistentState serverState = getServerState(server);
 
         serverState.players.put(player.getUuid(), new Plane(new Vec3d(x, 0, z), yaw));
+        serverState.markDirty();
     }
 
     public static void removePlayerPlane(PlayerEntity player) {
-        PlanePersistentState serverState = getServerState(player.getWorld().getServer());
+        MinecraftServer server = player.getServer();
+        if (server == null) {
+            return;
+        }
+        PlanePersistentState serverState = getServerState(server);
 
         serverState.players.remove(player.getUuid());
+        serverState.markDirty();
     }
 }

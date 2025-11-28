@@ -4,15 +4,15 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import github.fonvind.immersive2d.Immersive2D;
 import github.fonvind.immersive2d.client.Immersive2DClient;
 import github.fonvind.immersive2d.utils.Plane;
-import ladysnake.satin.api.event.PostWorldRenderCallback;
-import ladysnake.satin.api.event.ShaderEffectRenderCallback;
-import ladysnake.satin.api.experimental.ReadableDepthFramebuffer;
-import ladysnake.satin.api.managed.ManagedShaderEffect;
-import ladysnake.satin.api.managed.ShaderEffectManager;
-import ladysnake.satin.api.managed.uniform.*;
-import ladysnake.satin.api.util.GlMatrices;
+import org.ladysnake.satin.api.event.PostWorldRenderCallbackV3;
+import org.ladysnake.satin.api.event.ShaderEffectRenderCallback;
+import org.ladysnake.satin.api.experimental.ReadableDepthFramebuffer;
+import org.ladysnake.satin.api.managed.ManagedShaderEffect;
+import org.ladysnake.satin.api.managed.ShaderEffectManager;
+import org.ladysnake.satin.api.managed.uniform.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.util.Identifier;
@@ -22,13 +22,11 @@ import net.minecraft.world.World;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 
-public class Immersive2DShaders implements PostWorldRenderCallback, ShaderEffectRenderCallback {
-    public static final Identifier PLANE_SHADERS_ID = new Identifier(Immersive2D.MOD_ID, "shaders/post/plane_shaders.json");
+public class Immersive2DShaders implements PostWorldRenderCallbackV3, ShaderEffectRenderCallback {
+    public static final Identifier PLANE_SHADERS_ID = Identifier.of(Immersive2D.MOD_ID, "shaders/post/plane_shaders.json");
     public static final Immersive2DShaders INSTANCE = new Immersive2DShaders();
 
     private final MinecraftClient minecraftClient = MinecraftClient.getInstance();
-
-    private final Matrix4f projectionMatrix = new Matrix4f();
 
     final ManagedShaderEffect PLANE_SHADERS = ShaderEffectManager.getInstance().manage(PLANE_SHADERS_ID, shader -> {
         shader.setSamplerUniform("DepthSampler", ((ReadableDepthFramebuffer)minecraftClient.getFramebuffer()).getStillDepthMap());
@@ -45,10 +43,11 @@ public class Immersive2DShaders implements PostWorldRenderCallback, ShaderEffect
     private Vector2f lightLevel = new Vector2f(15f);
 
     @Override
-    public void onWorldRendered(Camera camera, float tickDelta, long nanoTime) {
+    public void onWorldRendered(MatrixStack matrices, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, Camera camera, float tickDelta) {
         Plane plane = Immersive2DClient.plane;
         if (plane != null) {
-            uniformInverseTransformMatrix.set(GlMatrices.getInverseTransformMatrix(projectionMatrix));
+            Matrix4f inverseProjectionMatrix = new Matrix4f(projectionMatrix).invert();
+            uniformInverseTransformMatrix.set(inverseProjectionMatrix);
 
             uniformCameraPos.set(camera.getPos().toVector3f());
 
@@ -61,6 +60,11 @@ public class Immersive2DShaders implements PostWorldRenderCallback, ShaderEffect
 
             World world = MinecraftClient.getInstance().world;
             PlayerEntity player = MinecraftClient.getInstance().player;
+
+            if (world == null || player == null) { // Added null checks
+                return;
+            }
+
             Vector2f targetLightLevel = new Vector2f(world.getLightLevel(LightType.BLOCK, player.getBlockPos()), world.getLightLevel(LightType.SKY, player.getBlockPos()));
             player.getHandItems().forEach(itemStack -> {
                 if (itemStack.getItem() instanceof BlockItem blockItem) {
@@ -77,8 +81,8 @@ public class Immersive2DShaders implements PostWorldRenderCallback, ShaderEffect
 
     @Override
     public void renderShaderEffects(float tickDelta) {
-        if (Immersive2DClient.plane != null) {
-            PLANE_SHADERS.render(tickDelta);
-        }
+        // if (Immersive2DClient.plane != null) { // Commented out shader rendering
+        //     PLANE_SHADERS.render(tickDelta);
+        // }
     }
 }

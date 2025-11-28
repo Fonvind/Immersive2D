@@ -5,47 +5,51 @@ import github.fonvind.immersive2d.Immersive2D;
 import github.fonvind.immersive2d.access.EntityPlaneGetterSetter;
 import github.fonvind.immersive2d.utils.Plane;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 @Mixin(ServerPlayerEntity.class)
 public abstract class ServerPlayerEntityMixin extends PlayerEntity {
     @Shadow public abstract ServerWorld getServerWorld();
+    @Shadow @Nullable public abstract BlockPos getSpawnPointPosition();
+    @Shadow public abstract RegistryKey<World> getSpawnPointDimension();
+    @Shadow public abstract float getSpawnAngle();
+    @Shadow public abstract void setSpawnPoint(RegistryKey<World> dimension, @Nullable BlockPos pos, float angle, boolean spawnPointSet, boolean bl);
 
     public ServerPlayerEntityMixin(World world, BlockPos pos, float yaw, GameProfile gameProfile) {
         super(world, pos, yaw, gameProfile);
     }
 
-    @Inject(method = "copyFrom", at = @At("HEAD"))
-    private void copyPlane(ServerPlayerEntity oldPlayer, boolean alive, CallbackInfo ci) {
+    @Inject(method = "copyFrom", at = @At("TAIL"))
+    private void copyPlaneAndClampSpawn(ServerPlayerEntity oldPlayer, boolean alive, CallbackInfo ci) {
         Plane plane = ((EntityPlaneGetterSetter) oldPlayer).immersive2d$getPlane();
         ((EntityPlaneGetterSetter) this).immersive2d$setPlane(plane);
 
         if (plane != null) {
+            MinecraftServer server = this.getServer();
+            if (server == null) {
+                return;
+            }
             // sync to client
-            Immersive2D.updatePlane(this.getServer(), (ServerPlayerEntity) (PlayerEntity) this, plane.getOffset().x, plane.getOffset().z, plane.getYaw());
-        }
-    }
+            Immersive2D.updatePlane(server, (ServerPlayerEntity) (PlayerEntity) this, plane.getOffset().x, plane.getOffset().z, plane.getYaw());
 
-    @ModifyArgs(method = "moveToSpawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/SpawnLocating;findOverworldSpawn(Lnet/minecraft/server/world/ServerWorld;II)Lnet/minecraft/util/math/BlockPos;"))
-    private void clampSpawnXZ(Args args) {
-        Plane plane = ((EntityPlaneGetterSetter) this).immersive2d$getPlane();
-        if (plane != null) {
-            int x = args.get(1);
-            int z = args.get(2);
-            Vec3d intersectPoint = plane.intersectPoint(new Vec3d(x, 0, z));
-            args.set(1, (int) intersectPoint.x);
-            args.set(2, (int) intersectPoint.z);
+            // Clamp spawn point
+            BlockPos spawnPos = this.getSpawnPointPosition();
+            if (spawnPos != null) {
+                Vec3d intersectPoint = plane.intersectPoint(new Vec3d(spawnPos.getX(), spawnPos.getY(), spawnPos.getZ()));
+                this.setSpawnPoint(this.getSpawnPointDimension(), new BlockPos((int) intersectPoint.x, spawnPos.getY(), (int) intersectPoint.z), this.getSpawnAngle(), true, false);
+            }
         }
     }
 }

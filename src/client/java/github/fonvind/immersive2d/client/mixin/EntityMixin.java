@@ -40,15 +40,39 @@ public abstract class EntityMixin {
             this.prevYaw = this.getYaw();
 
             MouseNormalizedGetter mouse = (MouseNormalizedGetter) MinecraftClient.getInstance().mouse;
-            float pitch = (float) (MathHelper.atan2(-mouse.immersive2d$getNormalizedY() * 0.60, Math.abs(mouse.immersive2d$getNormalizedX())) * MathHelper.DEGREES_PER_RADIAN);
-            this.setPitch(MathHelper.clamp(pitch, -90, 90));
 
-            double base = plane.getYaw() * MathHelper.DEGREES_PER_RADIAN;
+            // --- Simplified Pitch Calculation ---
+            // Directly map normalized Y mouse input to pitch within a reasonable range
+            float pitchSensitivity = 45.0F; // Degrees of pitch for full vertical mouse movement
+            float playerPitch = (float) (mouse.immersive2d$getNormalizedY() * pitchSensitivity);
+            this.setPitch(MathHelper.clamp(playerPitch, -90, 90));
+
+            // --- Simplified Yaw Calculation ---
+            // Base yaw is plane's yaw adjusted to face the camera (which is to the left of the player)
+            // plane.getYaw() is already in degrees
+            double basePlaneYaw = plane.getYaw();
+            float yawSensitivity = 60.0F; // Degrees of yaw for full horizontal mouse movement
+
+            float targetYawCenter;
+            float lerpFactor;
+
             if (Immersive2DClient.turnedAround.isPressed()) {
-                this.setYaw((float) MathHelper.lerp(MathHelper.clamp(3. * mouse.immersive2d$getNormalizedX() + 0.5, 0, 1), base + 90, base - 90));
+                // If turned around, base yaw is plane.getYaw() + 90 (facing the other side)
+                targetYawCenter = (float) (basePlaneYaw + 90);
+                lerpFactor = (float) MathHelper.clamp(3. * mouse.immersive2d$getNormalizedX() + 0.5, 0, 1); // Original sensitivity
             } else {
-                this.setYaw((float) MathHelper.lerp(MathHelper.clamp(7 * mouse.immersive2d$getNormalizedX() + 0.5, 0, 1), base + 90, base + 270));
+                // Default: base yaw is plane.getYaw() - 90 (facing the camera)
+                targetYawCenter = (float) (basePlaneYaw - 90);
+                lerpFactor = (float) MathHelper.clamp(7 * mouse.immersive2d$getNormalizedX() + 0.5, 0, 1); // Original sensitivity
             }
+
+            // Calculate the min and max yaw for the lerp based on the center and sensitivity
+            float minYaw = targetYawCenter - yawSensitivity / 2;
+            float maxYaw = targetYawCenter + yawSensitivity / 2;
+
+            // Apply the lerp to get the final player yaw
+            this.setYaw(MathHelper.lerp(lerpFactor, minYaw, maxYaw));
+
 
             if (this.vehicle != null) {
                 this.vehicle.onPassengerLookAround((Entity) (Object) this);

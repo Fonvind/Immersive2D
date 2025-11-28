@@ -21,8 +21,6 @@ public class Plane {
     public Plane(Vec3d offset, double yaw) {
         this.offset = offset;
         this.yaw = yaw;
-
-        this.slope = Math.tan(yaw);
         updateValues();
     }
 
@@ -54,22 +52,27 @@ public class Plane {
 
     private void updateValues() {
         this.slope = Math.tan(yaw);
-        if (slope == 0) {
-            // prevent division by 0
-            this.slope = 0.0000001;
-        }
-
-        this.slope = MathHelper.clamp(slope, -99, 99);
-
         this.normal = new Vec3d(-Math.sin(yaw), 0, Math.cos(yaw));
     }
 
     public Vec3d intersectPoint(Vec3d point) {
-        // slope(x - offset.x) + offset.z = (-1/slope)(x - point.x) + point.z
-        double x = (slope * offset.x - offset.z + point.x / slope + point.z) / (slope + 1 / slope);
-        double z = slope * (x - offset.x) + offset.z;
+        // Using a more stable geometric formula based on vector projection
+        // This avoids division and issues with vertical/horizontal lines
 
-        return new Vec3d(x, point.y, z);
+        // Vector from the plane's origin (offset) to the point
+        Vec3d pointToPlaneOrigin = point.subtract(this.offset);
+
+        // The plane's direction vector (tangent)
+        Vec3d planeDirection = new Vec3d(Math.cos(this.yaw), 0, Math.sin(this.yaw));
+
+        // Project the vector onto the plane's direction to find the closest point on the line
+        double dotProduct = pointToPlaneOrigin.dotProduct(planeDirection);
+        Vec3d projectedVector = planeDirection.multiply(dotProduct);
+
+        // The intersection point is the plane's origin plus the projected vector
+        Vec3d intersection = this.offset.add(projectedVector);
+
+        return new Vec3d(intersection.x, point.y, intersection.z);
     }
 
     // Positive is defined as being counter-clockwise

@@ -10,6 +10,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.BlockView;
+import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -26,14 +27,14 @@ public abstract class CameraMixin {
     double immersive2d$yMouseOffset = 0;
 
     @Shadow private boolean thirdPerson;
+    @Shadow private Vec3d pos;
+    @Shadow private final Vector3f horizontalPlane = new Vector3f();
+    @Shadow private final Vector3f verticalPlane = new Vector3f();
+
 
     @Shadow protected abstract void setPos(double x, double y, double z);
 
     @Shadow protected abstract void setRotation(float yaw, float pitch);
-
-    @Shadow protected abstract void moveBy(double x, double y, double z);
-
-    @Shadow private float cameraY;
 
     @Inject(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setRotation(FF)V"), cancellable = true)
     public void update(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
@@ -54,7 +55,17 @@ public abstract class CameraMixin {
             immersive2d$xMouseOffset = MathHelper.lerp(delta, immersive2d$xMouseOffset, mouse.immersive2d$getNormalizedX() * mouseOffsetScale);
             immersive2d$yMouseOffset = MathHelper.lerp(delta, immersive2d$yMouseOffset, mouse.immersive2d$getNormalizedY() * mouseOffsetScale);
 
-            this.moveBy(-8, immersive2d$yMouseOffset, immersive2d$xMouseOffset);
+            // Correctly calculate the backward vector
+            Vector3f backward = new Vector3f(this.verticalPlane).cross(this.horizontalPlane);
+            backward.normalize();
+
+            // Apply movement based on the original moveBy(x, y, z) logic, with inverted side-to-side movement
+            this.setPos(
+                    this.pos.x + backward.x() * immersive2d$xMouseOffset + this.verticalPlane.x() * immersive2d$yMouseOffset + this.horizontalPlane.x() * -8,
+                    this.pos.y + backward.y() * immersive2d$xMouseOffset + this.verticalPlane.y() * immersive2d$yMouseOffset + this.horizontalPlane.y() * -8,
+                    this.pos.z + backward.z() * immersive2d$xMouseOffset + this.verticalPlane.z() * immersive2d$yMouseOffset + this.horizontalPlane.z() * -8
+            );
+
 
             ci.cancel();
         }

@@ -1,28 +1,9 @@
 {
-  "targets": [
-    "fog",
-    "blur",
-    "vignette"
-  ],
+  "targets": [],
   "passes": [
     {
-      "name": "two_dimensional:fog",
-      "intarget": "minecraft:main",
-      "outtarget": "fog"
-    },
-    {
-      "name": "two_dimensional:distance_blur",
-      "intarget": "fog",
-      "outtarget": "blur"
-    },
-    {
-      "name": "two_dimensional:vignette",
-      "intarget": "blur",
-      "outtarget": "vignette"
-    },
-    {
       "name": "blit",
-      "intarget": "vignette",
+      "intarget": "minecraft:main",
       "outtarget": "minecraft:main"
     }
   ]

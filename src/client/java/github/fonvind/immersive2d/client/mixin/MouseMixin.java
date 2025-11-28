@@ -37,7 +37,7 @@ public class MouseMixin implements MouseNormalizedGetter {
         return Objects.requireNonNullElse(immersive2d$normalizedY, 0d);
     }
 
-    @Inject(method = "updateMouse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/GameOptions;getMouseSensitivity()Lnet/minecraft/client/option/SimpleOption;"))
+    @Inject(method = "updateMouse", at = @At("HEAD"))
     public void updateNormalizedPos(CallbackInfo ci) {
         double width = this.client.getWindow().getWidth() / 2f;
         double height = this.client.getWindow().getHeight() / 2f;

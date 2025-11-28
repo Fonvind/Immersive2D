@@ -8,11 +8,11 @@ import net.minecraft.util.Identifier;
 
 public class Immersive2DCrosshairRenderer {
     public static void intialize() {
-        HudRenderCallback.EVENT.register(((drawContext, tickDelta) -> {
+        HudRenderCallback.EVENT.register(((drawContext, renderTickCounter) -> {
             if (Immersive2DClient.plane != null) {
                 Mouse mouse = MinecraftClient.getInstance().mouse;
                 int scaleFactor = MinecraftClient.getInstance().getWindow().getWidth()/drawContext.getScaledWindowWidth();
-                drawContext.drawTexture(new Identifier("textures/gui/icons.png"), (int) (mouse.getX()/scaleFactor) - 6, (int) (mouse.getY()/scaleFactor) - 5, 0, 0, 15, 15);
+                drawContext.drawTexture(Identifier.of("textures/gui/icons.png"), (int) (mouse.getX()/scaleFactor) - 6, (int) (mouse.getY()/scaleFactor) - 5, 0, 0, 15, 15);
             }
         }));
     }

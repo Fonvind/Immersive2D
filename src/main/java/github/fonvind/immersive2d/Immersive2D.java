@@ -21,7 +21,7 @@ import net.minecraft.util.math.Vec3d;
 import java.util.logging.Logger;
 
 public class Immersive2D implements ModInitializer {
-    public static final String MOD_ID = "two_dimensional";
+    public static final String MOD_ID = "immersive2d";
     public static final Logger LOGGER = Logger.getLogger(MOD_ID);
 
     public static final Identifier PLANE_SYNC = new Identifier(MOD_ID, "plane_sync");
@@ -39,15 +39,15 @@ public class Immersive2D implements ModInitializer {
             ServerPlayNetworking.send(player, PLANE_SYNC, data);
 
             Plane newPlane = new Plane(new Vec3d(x, 0., z), radYaw);
-            Plane oldPlane = ((EntityPlaneGetterSetter) player).twoDimensional$getPlane();
+            Plane oldPlane = ((EntityPlaneGetterSetter) player).immersive2d$getPlane();
             if (oldPlane != null) {
                 newPlane.containedEntities = oldPlane.containedEntities;
                 newPlane.containedEntities.forEach(entity -> {
-                    ((EntityPlaneGetterSetter) entity).twoDimensional$setPlane(newPlane);
+                    ((EntityPlaneGetterSetter) entity).immersive2d$setPlane(newPlane);
                 });
             }
 
-            ((EntityPlaneGetterSetter) player).twoDimensional$setPlane(newPlane);
+            ((EntityPlaneGetterSetter) player).immersive2d$setPlane(newPlane);
             player.setPos(x, player.getPos().y, z);
         });
 
@@ -59,15 +59,15 @@ public class Immersive2D implements ModInitializer {
         minecraftServer.execute(() -> {
             ServerPlayNetworking.send(player, PLANE_REMOVE, PacketByteBufs.empty());
 
-            Plane oldPlane = ((EntityPlaneGetterSetter) player).twoDimensional$getPlane();
+            Plane oldPlane = ((EntityPlaneGetterSetter) player).immersive2d$getPlane();
             if (oldPlane != null) {
                 oldPlane.containedEntities.forEach(entity -> {
-                    ((EntityPlaneGetterSetter) entity).twoDimensional$setPlane(null);
+                    ((EntityPlaneGetterSetter) entity).immersive2d$setPlane(null);
                 });
             }
 
             PlanePersistentState.removePlayerPlane(player);
-            ((EntityPlaneGetterSetter) player).twoDimensional$setPlane(null);
+            ((EntityPlaneGetterSetter) player).immersive2d$setPlane(null);
         });
         return Text.literal("Active plane set to none.");
     }
@@ -83,7 +83,7 @@ public class Immersive2D implements ModInitializer {
 
         CommandRegistrationCallback.EVENT.register(((commandDispatcher, commandRegistryAccess, registrationEnvironment) -> {
             if (registrationEnvironment.integrated) {
-                commandDispatcher.register(CommandManager.literal("twoDimensional").
+                commandDispatcher.register(CommandManager.literal("immersive2d").
                         then(CommandManager.literal("default").executes(commandContext -> {
                             ServerPlayerEntity player = commandContext.getSource().getPlayer();
                             if (player != null) {

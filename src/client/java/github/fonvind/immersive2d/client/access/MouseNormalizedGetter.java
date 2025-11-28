@@ -1,6 +1,6 @@
 package github.fonvind.immersive2d.client.access;
 
 public interface MouseNormalizedGetter {
-    double twoDimensional$getNormalizedX();
-    double twoDimensional$getNormalizedY();
+    double immersive2d$getNormalizedX();
+    double immersive2d$getNormalizedY();
 }

@@ -28,8 +28,8 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
 
     @Inject(method = "copyFrom", at = @At("HEAD"))
     private void copyPlane(ServerPlayerEntity oldPlayer, boolean alive, CallbackInfo ci) {
-        Plane plane = ((EntityPlaneGetterSetter) oldPlayer).twoDimensional$getPlane();
-        ((EntityPlaneGetterSetter) this).twoDimensional$setPlane(plane);
+        Plane plane = ((EntityPlaneGetterSetter) oldPlayer).immersive2d$getPlane();
+        ((EntityPlaneGetterSetter) this).immersive2d$setPlane(plane);
 
         if (plane != null) {
             // sync to client
@@ -39,7 +39,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
 
     @ModifyArgs(method = "moveToSpawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/SpawnLocating;findOverworldSpawn(Lnet/minecraft/server/world/ServerWorld;II)Lnet/minecraft/util/math/BlockPos;"))
     private void clampSpawnXZ(Args args) {
-        Plane plane = ((EntityPlaneGetterSetter) this).twoDimensional$getPlane();
+        Plane plane = ((EntityPlaneGetterSetter) this).immersive2d$getPlane();
         if (plane != null) {
             int x = args.get(1);
             int z = args.get(2);

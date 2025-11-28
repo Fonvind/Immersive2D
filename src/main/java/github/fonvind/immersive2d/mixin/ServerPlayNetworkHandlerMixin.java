@@ -20,26 +20,26 @@ import java.util.Set;
 public class ServerPlayNetworkHandlerMixin {
     @Shadow public ServerPlayerEntity player;
     @Unique
-    Vec3d TwoDimensional$intersectPoint;
+    Vec3d immersive2d$intersectPoint;
 
     // this is kinda jank
     @Inject(method = "requestTeleport(DDDFFLjava/util/Set;)V", at = @At("HEAD"))
     private void clampInput(double x, double y, double z, float yaw, float pitch, Set<PositionFlag> flags, CallbackInfo ci) {
-        Plane plane = ((EntityPlaneGetterSetter) this.player).twoDimensional$getPlane();
+        Plane plane = ((EntityPlaneGetterSetter) this.player).immersive2d$getPlane();
         if (plane != null) {
-            TwoDimensional$intersectPoint = plane.intersectPoint(new Vec3d(x, y, z));
+            immersive2d$intersectPoint = plane.intersectPoint(new Vec3d(x, y, z));
         } else {
-            TwoDimensional$intersectPoint = new Vec3d(x, y, z);
+            immersive2d$intersectPoint = new Vec3d(x, y, z);
         }
     }
 
     @ModifyVariable(method = "requestTeleport(DDDFFLjava/util/Set;)V", at = @At("HEAD"), ordinal = 0, argsOnly = true)
     private double clampX(double x) {
-        return TwoDimensional$intersectPoint.x;
+        return immersive2d$intersectPoint.x;
     }
 
     @ModifyVariable(method = "requestTeleport(DDDFFLjava/util/Set;)V", at = @At("HEAD"), ordinal = 2, argsOnly = true)
     private double clampZ(double Z) {
-        return TwoDimensional$intersectPoint.z;
+        return immersive2d$intersectPoint.z;
     }
 }

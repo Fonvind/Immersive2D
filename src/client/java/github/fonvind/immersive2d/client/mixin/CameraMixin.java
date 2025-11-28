@@ -20,10 +20,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Camera.class)
 public abstract class CameraMixin {
     @Unique
-    double twoDimensional$xMouseOffset = 0;
+    double immersive2d$xMouseOffset = 0;
 
     @Unique
-    double twoDimensional$yMouseOffset = 0;
+    double immersive2d$yMouseOffset = 0;
 
     @Shadow private boolean thirdPerson;
 
@@ -48,20 +48,20 @@ public abstract class CameraMixin {
 
             MouseNormalizedGetter mouse = (MouseNormalizedGetter) MinecraftClient.getInstance().mouse;
 
-            float mouseOffsetScale = twoDimensional$getMouseOffsetScale(MinecraftClient.getInstance().player);
+            float mouseOffsetScale = immersive2d$getMouseOffsetScale(MinecraftClient.getInstance().player);
             double delta = 0.2 - (0.15 * mouseOffsetScale/40);
 
-            twoDimensional$xMouseOffset = MathHelper.lerp(delta, twoDimensional$xMouseOffset, mouse.twoDimensional$getNormalizedX() * mouseOffsetScale);
-            twoDimensional$yMouseOffset = MathHelper.lerp(delta, twoDimensional$yMouseOffset, mouse.twoDimensional$getNormalizedY() * mouseOffsetScale);
+            immersive2d$xMouseOffset = MathHelper.lerp(delta, immersive2d$xMouseOffset, mouse.immersive2d$getNormalizedX() * mouseOffsetScale);
+            immersive2d$yMouseOffset = MathHelper.lerp(delta, immersive2d$yMouseOffset, mouse.immersive2d$getNormalizedY() * mouseOffsetScale);
 
-            this.moveBy(-8, twoDimensional$yMouseOffset, twoDimensional$xMouseOffset);
+            this.moveBy(-8, immersive2d$yMouseOffset, immersive2d$xMouseOffset);
 
             ci.cancel();
         }
     }
 
     @Unique
-    private float twoDimensional$getMouseOffsetScale(PlayerEntity player) {
+    private float immersive2d$getMouseOffsetScale(PlayerEntity player) {
         if (player == null || !player.isUsingItem()) {
             return 1;
         }

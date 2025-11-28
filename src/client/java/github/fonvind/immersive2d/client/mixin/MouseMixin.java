@@ -23,18 +23,18 @@ public class MouseMixin implements MouseNormalizedGetter {
     @Shadow private double x;
     @Shadow private double y;
     @Unique
-    private Double twoDimensional$normalizedX = 0d;
+    private Double immersive2d$normalizedX = 0d;
     @Unique
-    private Double twoDimensional$normalizedY = 0d;
+    private Double immersive2d$normalizedY = 0d;
 
     @Override
-    public double twoDimensional$getNormalizedX() {
-        return Objects.requireNonNullElse(twoDimensional$normalizedX, 0d);
+    public double immersive2d$getNormalizedX() {
+        return Objects.requireNonNullElse(immersive2d$normalizedX, 0d);
     }
 
     @Override
-    public double twoDimensional$getNormalizedY() {
-        return Objects.requireNonNullElse(twoDimensional$normalizedY, 0d);
+    public double immersive2d$getNormalizedY() {
+        return Objects.requireNonNullElse(immersive2d$normalizedY, 0d);
     }
 
     @Inject(method = "updateMouse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/GameOptions;getMouseSensitivity()Lnet/minecraft/client/option/SimpleOption;"))
@@ -42,15 +42,15 @@ public class MouseMixin implements MouseNormalizedGetter {
         double width = this.client.getWindow().getWidth() / 2f;
         double height = this.client.getWindow().getHeight() / 2f;
 
-        twoDimensional$normalizedX = (width - this.x) / width;
-        twoDimensional$normalizedY = (height - this.y) / height;
+        immersive2d$normalizedX = (width - this.x) / width;
+        immersive2d$normalizedY = (height - this.y) / height;
 
-        if (twoDimensional$normalizedX.isInfinite() || twoDimensional$normalizedX.isNaN()) {
-            twoDimensional$normalizedX = 0d;
+        if (immersive2d$normalizedX.isInfinite() || immersive2d$normalizedX.isNaN()) {
+            immersive2d$normalizedX = 0d;
         }
 
-        if (twoDimensional$normalizedY.isInfinite() || twoDimensional$normalizedY.isNaN()) {
-            twoDimensional$normalizedY = 0d;
+        if (immersive2d$normalizedY.isInfinite() || immersive2d$normalizedY.isNaN()) {
+            immersive2d$normalizedY = 0d;
         }
     }
 

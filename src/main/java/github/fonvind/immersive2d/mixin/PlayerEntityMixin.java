@@ -24,7 +24,7 @@ public abstract class PlayerEntityMixin extends LivingEntity {
 
     @Inject(method = "isBlockBreakingRestricted", at = @At("HEAD"), cancellable = true)
     private void disableBlockBreakingOutsidePlane(World world, BlockPos pos, GameMode gameMode, CallbackInfoReturnable<Boolean> cir) {
-        Plane plane = ((EntityPlaneGetterSetter) this).twoDimensional$getPlane();
+        Plane plane = ((EntityPlaneGetterSetter) this).immersive2d$getPlane();
         if (plane != null) {
             double dist = plane.sdf(pos.toCenterPos());
             if (dist <= Plane.CULL_DIST || dist >= 1.8) {
@@ -35,12 +35,12 @@ public abstract class PlayerEntityMixin extends LivingEntity {
 
     @Inject(method = "tick", at =  @At("HEAD"))
     private void updatePlaneContainedEntities(CallbackInfo ci) {
-        Plane plane = ((EntityPlaneGetterSetter) this).twoDimensional$getPlane();
+        Plane plane = ((EntityPlaneGetterSetter) this).immersive2d$getPlane();
         if (plane != null && this.age % 20 == 0 && this.getWorld() instanceof ServerWorld world) {
             world.getOtherEntities(this, Box.of(getPos(), 64, 32, 64)).forEach(entity -> {
                 EntityPlaneGetterSetter entityPlane = (EntityPlaneGetterSetter) entity;
-                if (entityPlane.twoDimensional$getPlane() == null && !(entity instanceof PlayerEntity)) {
-                    entityPlane.twoDimensional$setPlane(plane);
+                if (entityPlane.immersive2d$getPlane() == null && !(entity instanceof PlayerEntity)) {
+                    entityPlane.immersive2d$setPlane(plane);
                     plane.containedEntities.add(entity);
                 }
             });

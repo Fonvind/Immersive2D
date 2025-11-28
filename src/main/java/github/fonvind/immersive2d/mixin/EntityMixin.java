@@ -20,21 +20,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Entity.class)
 public abstract class EntityMixin implements EntityPlaneGetterSetter {
     @Unique
-    private Plane twoDimensional$plane = null;
+    private Plane immersive2d$plane = null;
 
     @Override
     @Nullable
-    public Plane twoDimensional$getPlane() {
+    public Plane immersive2d$getPlane() {
         if ((Object)this instanceof ServerPlayerEntity player) {
             return PlanePersistentState.getPlayerPlane(player);
         }
 
-        return twoDimensional$plane;
+        return immersive2d$plane;
     }
 
     @Override
-    public void twoDimensional$setPlane(Plane plane) {
-        this.twoDimensional$plane = plane;
+    public void immersive2d$setPlane(Plane plane) {
+        this.immersive2d$plane = plane;
     }
     @Shadow public abstract void setVelocity(Vec3d velocity);
 
@@ -60,9 +60,9 @@ public abstract class EntityMixin implements EntityPlaneGetterSetter {
 
     @Inject(method = "updateVelocity", at = @At("HEAD"), cancellable = true)
     public void updateVelocity(float speed, Vec3d movementInput, CallbackInfo ci) {
-        if (twoDimensional$getPlane() != null) {
+        if (immersive2d$getPlane() != null) {
             // convert z movement into movement in direction of yaw
-            double planeYaw = twoDimensional$getPlane().getYaw() * MathHelper.DEGREES_PER_RADIAN;
+            double planeYaw = immersive2d$getPlane().getYaw() * MathHelper.DEGREES_PER_RADIAN;
             movementInput = new Vec3d(movementInput.x + movementInput.z * MathHelper.sign(this.getYaw() - 180 - planeYaw), movementInput.y, 0.);
             this.setVelocity(this.getVelocity().add(movementInputToVelocity(movementInput, speed, (float) (planeYaw))));
             ci.cancel();
@@ -71,7 +71,7 @@ public abstract class EntityMixin implements EntityPlaneGetterSetter {
 
     @Inject(method = "setVelocity(Lnet/minecraft/util/math/Vec3d;)V", at = @At("HEAD"), cancellable = true)
     public void clampVelocityToPlane(Vec3d velocity, CallbackInfo ci) {
-        Plane plane = twoDimensional$getPlane();
+        Plane plane = immersive2d$getPlane();
         if (plane != null) {
             this.velocity = plane.intersectPoint(velocity.add(this.getPos())).subtract(this.getPos());
             ci.cancel();
@@ -80,7 +80,7 @@ public abstract class EntityMixin implements EntityPlaneGetterSetter {
 
     @Inject(method = "setPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;<init>(DDD)V", shift = At.Shift.AFTER))
     public void clampSetPos(double x, double y, double z, CallbackInfo ci) {
-        Plane plane = twoDimensional$getPlane();
+        Plane plane = immersive2d$getPlane();
         if (plane != null) {
             this.pos = plane.intersectPoint(new Vec3d(x, y, z));
         }
@@ -88,15 +88,15 @@ public abstract class EntityMixin implements EntityPlaneGetterSetter {
 
     @Inject(method = "setPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;<init>(III)V", shift = At.Shift.AFTER))
     public void clampBlockPos(double x, double y, double z, CallbackInfo ci) {
-        Plane plane = twoDimensional$getPlane();
+        Plane plane = immersive2d$getPlane();
         if (plane != null) {
             this.blockPos = BlockPos.ofFloored(plane.intersectPoint(new Vec3d(x, y, z)));
         }
     }
 
     @Inject(method = "updatePosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;setPosition(DDD)V"))
-    private void clampPrevPos(double x, double y, double z, CallbackInfo ci, @Local (ordinal = 0) double d, @Local (ordinal = 1) double e) {
-        Plane plane = twoDimensional$getPlane();
+    private void clampPrevPos(double x, double y, double z, CallbackInfo ci, @Local(ordinal = 0, argsOnly = true) double d, @Local(ordinal = 1, argsOnly = true) double e) {
+        Plane plane = immersive2d$getPlane();
         if (plane != null) {
             Vec3d clampedPos = plane.intersectPoint(new Vec3d(d, y, e));
             this.prevX = clampedPos.x;

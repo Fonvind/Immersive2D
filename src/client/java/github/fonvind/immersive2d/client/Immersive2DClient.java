@@ -19,9 +19,9 @@ import org.lwjgl.glfw.GLFW;
 public class Immersive2DClient implements ClientModInitializer {
     public static Plane plane = null;
     public static KeyBinding turnedAround = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-            "key.twodimensional.turn_around",
+            "key.immersive2d.turn_around",
             GLFW.GLFW_KEY_B,
-            "keyGroup.twodimensional"
+            "keyGroup.immersive2d"
     ));
 
     private boolean shouldUpdatePlane = true;
@@ -43,7 +43,7 @@ public class Immersive2DClient implements ClientModInitializer {
 
         ClientTickEvents.START_CLIENT_TICK.register((client -> {
             if (shouldUpdatePlane && client.player != null) {
-                ((EntityPlaneGetterSetter) client.player).twoDimensional$setPlane(plane);
+                ((EntityPlaneGetterSetter) client.player).immersive2d$setPlane(plane);
                 client.worldRenderer.reload();
                 shouldUpdatePlane = false;
 

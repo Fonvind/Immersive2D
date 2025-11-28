@@ -28,7 +28,7 @@ public abstract class ClientPlayerEntityMixin extends Entity {
     @ModifyReturnValue(method = "isWalking", at = @At("RETURN"))
     private boolean countSidewaysMovementOnPlane(boolean original) {
         if (Immersive2DClient.plane != null) {
-            return original || this.input.movementSideways * MathHelper.sign(((MouseNormalizedGetter) client.mouse).twoDimensional$getNormalizedX()) >= 0.8;
+            return original || this.input.movementSideways * MathHelper.sign(((MouseNormalizedGetter) client.mouse).immersive2d$getNormalizedX()) >= 0.8;
         }
 
         return original;

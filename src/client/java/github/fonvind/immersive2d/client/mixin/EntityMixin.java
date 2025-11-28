@@ -40,14 +40,14 @@ public abstract class EntityMixin {
             this.prevYaw = this.getYaw();
 
             MouseNormalizedGetter mouse = (MouseNormalizedGetter) MinecraftClient.getInstance().mouse;
-            float pitch = (float) (MathHelper.atan2(-mouse.twoDimensional$getNormalizedY() * 0.60, Math.abs(mouse.twoDimensional$getNormalizedX())) * MathHelper.DEGREES_PER_RADIAN);
+            float pitch = (float) (MathHelper.atan2(-mouse.immersive2d$getNormalizedY() * 0.60, Math.abs(mouse.immersive2d$getNormalizedX())) * MathHelper.DEGREES_PER_RADIAN);
             this.setPitch(MathHelper.clamp(pitch, -90, 90));
 
             double base = plane.getYaw() * MathHelper.DEGREES_PER_RADIAN;
             if (Immersive2DClient.turnedAround.isPressed()) {
-                this.setYaw((float) MathHelper.lerp(MathHelper.clamp(3. * mouse.twoDimensional$getNormalizedX() + 0.5, 0, 1), base + 90, base - 90));
+                this.setYaw((float) MathHelper.lerp(MathHelper.clamp(3. * mouse.immersive2d$getNormalizedX() + 0.5, 0, 1), base + 90, base - 90));
             } else {
-                this.setYaw((float) MathHelper.lerp(MathHelper.clamp(7 * mouse.twoDimensional$getNormalizedX() + 0.5, 0, 1), base + 90, base + 270));
+                this.setYaw((float) MathHelper.lerp(MathHelper.clamp(7 * mouse.immersive2d$getNormalizedX() + 0.5, 0, 1), base + 90, base + 270));
             }
 
             if (this.vehicle != null) {

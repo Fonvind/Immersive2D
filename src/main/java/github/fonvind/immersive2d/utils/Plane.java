@@ -10,7 +10,7 @@ import java.util.List;
 
 public class Plane {
     public static double CULL_DIST = -0.5;
-    public List<Entity> containedEntities = new ArrayList<Entity>();
+    public List<Entity> containedEntities = new ArrayList<>();
 
     private Vec3d offset;
     private double yaw;

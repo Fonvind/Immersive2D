@@ -5,8 +5,6 @@ import github.fonvind.immersive2d.client.rendering.Immersive2DCrosshairRenderer;
 import github.fonvind.immersive2d.client.rendering.Immersive2DShaders;
 import github.fonvind.immersive2d.access.EntityPlaneGetterSetter;
 import github.fonvind.immersive2d.utils.Plane;
-import org.ladysnake.satin.api.event.PostWorldRenderCallbackV3;
-import org.ladysnake.satin.api.event.ShaderEffectRenderCallback;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;

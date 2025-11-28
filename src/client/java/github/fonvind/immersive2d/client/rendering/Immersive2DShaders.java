@@ -28,9 +28,7 @@ public class Immersive2DShaders implements PostWorldRenderCallbackV3, ShaderEffe
 
     private final MinecraftClient minecraftClient = MinecraftClient.getInstance();
 
-    final ManagedShaderEffect PLANE_SHADERS = ShaderEffectManager.getInstance().manage(PLANE_SHADERS_ID, shader -> {
-        shader.setSamplerUniform("DepthSampler", ((ReadableDepthFramebuffer)minecraftClient.getFramebuffer()).getStillDepthMap());
-    });
+    final ManagedShaderEffect PLANE_SHADERS = ShaderEffectManager.getInstance().manage(PLANE_SHADERS_ID, shader -> shader.setSamplerUniform("DepthSampler", ((ReadableDepthFramebuffer)minecraftClient.getFramebuffer()).getStillDepthMap()));
     private final UniformMat4 uniformInverseTransformMatrix = PLANE_SHADERS.findUniformMat4("InverseTransformMatrix");
     private final Uniform3f uniformCameraPos = PLANE_SHADERS.findUniform3f("CameraPos");
     private final Uniform3f uniformPlayerPos = PLANE_SHADERS.findUniform3f("PlayerPos");

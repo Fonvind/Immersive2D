@@ -3,7 +3,6 @@ package github.fonvind.immersive2d.client.mixin;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import github.fonvind.immersive2d.client.Immersive2DClient;
 import github.fonvind.immersive2d.client.access.MouseNormalizedGetter;
-import github.fonvind.immersive2d.utils.Plane;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.input.Input;
 import net.minecraft.client.network.ClientPlayerEntity;

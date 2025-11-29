@@ -56,21 +56,15 @@ public abstract class EntityMixin {
             float yawRightTarget; // Yaw when mouse is far right
 
             if (Immersive2DClient.turnedAround.isPressed()) {
-                // If turned around, player faces away from camera.
-                // Camera is to the left of the player (plane.getYaw() + 90).
-                // So, player facing away from camera means player yaw is plane.getYaw() - 90.
-                // The lerp will rotate around this "away" direction.
+                // If turned around, player faces South (0 degrees)
                 lerpFactor = (float) MathHelper.clamp(3. * mouse.immersive2d$getNormalizedX() + 0.5, 0, 1);
-                yawLeftTarget = (float) (basePlaneYawDegrees - 90.0F + 20.0F); // Slightly right of "away"
-                yawRightTarget = (float) (basePlaneYawDegrees - 90.0F - 20.0F); // Slightly left of "away"
+                yawLeftTarget = (float) (basePlaneYawDegrees + 0.0F + 20.0F); // Slightly right of "South"
+                yawRightTarget = (float) (basePlaneYawDegrees + 0.0F - 20.0F); // Slightly left of "South"
             } else {
-                // Default: player faces towards camera.
-                // Camera is to the left of the player (plane.getYaw() + 90).
-                // So, player facing towards camera means player yaw is plane.getYaw() + 90.
-                // The lerp will rotate around this "towards" direction.
+                // Default: player faces North (180 degrees)
                 lerpFactor = (float) MathHelper.clamp(7 * mouse.immersive2d$getNormalizedX() + 0.5, 0, 1);
-                yawLeftTarget = (float) (basePlaneYawDegrees + 90.0F - 20.0F); // Slightly left of "towards"
-                yawRightTarget = (float) (basePlaneYawDegrees + 90.0F + 20.0F); // Slightly right of "towards"
+                yawLeftTarget = (float) (basePlaneYawDegrees + 180.0F - 20.0F); // Slightly left of "North"
+                yawRightTarget = (float) (basePlaneYawDegrees + 180.0F + 20.0F); // Slightly right of "North"
             }
 
             // Apply the lerp to get the final player body yaw

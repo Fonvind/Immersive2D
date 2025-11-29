@@ -17,4 +17,16 @@ public abstract class GameRendererMixin {
 
     @Shadow @Final private MinecraftClient client;
 
+    @Inject(method = "updateCrosshairTarget", at = @At("TAIL"))
+    private void immersive2d$overwriteRaycastWith2D(float tickDelta, CallbackInfo ci) {
+        if (Immersive2DClient.plane != null) {
+            Entity cameraEntity = this.client.getCameraEntity();
+            if (cameraEntity != null && this.client.world != null && this.client.player != null) {
+                // Use the player's actual reach distance
+                double interactionRange = this.client.player.getBlockInteractionRange();
+                // Overwrite the vanilla crosshairTarget with our 2D-constrained raycast result
+                this.client.crosshairTarget = Immersive2DRaycaster.raycast2D(cameraEntity, interactionRange, tickDelta);
+            }
+        }
+    }
 }

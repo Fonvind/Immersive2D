@@ -18,7 +18,7 @@ public abstract class GameRendererMixin {
     @Shadow @Final private MinecraftClient client;
 
     @Inject(method = "updateCrosshairTarget", at = @At("TAIL"))
-    void immersive2d$overwriteRaycastWith2D(float tickDelta, CallbackInfo ci) { // Changed from private to package-private
+    public void immersive2d$overwriteRaycastWith2D(float tickDelta, CallbackInfo ci) { // Changed to public
         if (Immersive2DClient.plane != null) {
             Entity cameraEntity = this.client.getCameraEntity();
             if (cameraEntity != null && this.client.world != null && this.client.player != null) {

@@ -1,7 +1,6 @@
 package github.fonvind.immersive2d.client;
 
 import github.fonvind.immersive2d.Immersive2D;
-import github.fonvind.immersive2d.client.rendering.Immersive2DCrosshairRenderer;
 import github.fonvind.immersive2d.access.EntityPlaneGetterSetter;
 import github.fonvind.immersive2d.utils.Plane;
 import net.fabricmc.api.ClientModInitializer;

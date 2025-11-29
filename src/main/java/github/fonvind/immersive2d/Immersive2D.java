@@ -58,10 +58,11 @@ public class Immersive2D implements ModInitializer {
         }
     }
 
-    private static float snapYawToCardinal(float yaw) {
-        float wrappedYaw = MathHelper.wrapDegrees(yaw);
-        return Math.round(wrappedYaw / 90.0F) * 90.0F;
-    }
+    // This function is no longer needed if we hardcode yaw to 0.0f
+    // private static float snapYawToCardinal(float yaw) {
+    //     float wrappedYaw = MathHelper.wrapDegrees(yaw);
+    //     return Math.round(wrappedYaw / 90.0F) * 90.0F;
+    // }
 
 
     public static Text updatePlane(MinecraftServer minecraftServer, ServerPlayerEntity player, double x, double z, double yaw) {
@@ -138,8 +139,8 @@ public class Immersive2D implements ModInitializer {
                             ServerPlayerEntity player = commandContext.getSource().getPlayer();
                             if (player != null) {
                                 return updatePlane(commandContext.getSource().getServer(), player,
-                                        player.getBlockX() + 0.5, player.getBlockZ() + 0.5, snapYawToCardinal(player.getYaw())
-                                ).equals(Text.empty()) ? 1 : 0; // Simplified lambda
+                                        player.getBlockX() + 0.5, player.getBlockZ() + 0.5, 0.0f // Hardcoded yaw to 0.0f (South)
+                                ).equals(Text.empty()) ? 1 : 0;
                             }
 
                             commandContext.getSource().sendError(Text.literal("This command can only be called from a player!"));
@@ -149,8 +150,8 @@ public class Immersive2D implements ModInitializer {
                             ServerPlayerEntity player = commandContext.getSource().getPlayer();
                             if (player != null) {
                                 return updatePlane(commandContext.getSource().getServer(), player,
-                                        player.getBlockX() + 0.5, player.getBlockZ() + 0.5, snapYawToCardinal((float) DoubleArgumentType.getDouble(commandContext, "yaw"))
-                                ).equals(Text.empty()) ? 1 : 0; // Simplified lambda
+                                        player.getBlockX() + 0.5, player.getBlockZ() + 0.5, 0.0f // Hardcoded yaw to 0.0f (South)
+                                ).equals(Text.empty()) ? 1 : 0;
                             }
 
                             commandContext.getSource().sendError(Text.literal("This command can only be called from a player!"));
@@ -163,8 +164,8 @@ public class Immersive2D implements ModInitializer {
                                                     ServerPlayerEntity player = commandContext.getSource().getPlayer();
                                                     if (player != null) {
                                                         return updatePlane(commandContext.getSource().getServer(), player,
-                                                                DoubleArgumentType.getDouble(commandContext, "offset_x"), DoubleArgumentType.getDouble(commandContext, "offset_z"), snapYawToCardinal((float) DoubleArgumentType.getDouble(commandContext, "yaw"))
-                                                        ).equals(Text.empty()) ? 1 : 0; // Simplified lambda
+                                                                DoubleArgumentType.getDouble(commandContext, "offset_x"), DoubleArgumentType.getDouble(commandContext, "offset_z"), 0.0f // Hardcoded yaw to 0.0f (South)
+                                                        ).equals(Text.empty()) ? 1 : 0;
                                                     }
 
                                                     commandContext.getSource().sendError(Text.literal("This command can only be called from a player!"));
@@ -173,7 +174,7 @@ public class Immersive2D implements ModInitializer {
                         .then(CommandManager.literal("disable").executes(commandContext -> {
                             ServerPlayerEntity player = commandContext.getSource().getPlayer();
                             if (player != null) {
-                                return removePlane(commandContext.getSource().getServer(), commandContext.getSource().getPlayer()).equals(Text.empty()) ? 1 : 0; // Simplified lambda
+                                return removePlane(commandContext.getSource().getServer(), commandContext.getSource().getPlayer()).equals(Text.empty()) ? 1 : 0;
                             }
 
                             commandContext.getSource().sendError(Text.literal("This command can only be called from a player!"));

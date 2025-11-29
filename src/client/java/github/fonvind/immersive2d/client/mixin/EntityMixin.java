@@ -43,28 +43,26 @@ public abstract class EntityMixin {
             MouseNormalizedGetter mouse = (MouseNormalizedGetter) MinecraftClient.getInstance().mouse;
 
             // --- Player Head Pitch Aiming Logic (Simplified & Corrected Inversion) ---
-            // Directly map normalized Y mouse input to pitch within a reasonable range
-            float pitchSensitivity = 45.0F; // Degrees of pitch for full vertical mouse movement
-            // Invert mouse Y for natural up/down movement (mouse up = look up)
+            float pitchSensitivity = 45.0F;
             float playerPitch = (float) (-mouse.immersive2d$getNormalizedY() * pitchSensitivity);
             this.setPitch(MathHelper.clamp(playerPitch, -90, 90));
 
-            // --- Player Body Yaw Logic (Smooth Adjustment based on Mouse X, closer to 1.20.1 feel) ---
+            // --- Player Body Yaw Logic (Smooth Adjustment based on Mouse X) ---
             double basePlaneYawDegrees = Math.toDegrees(plane.getYaw());
             float lerpFactor;
-            float yawLeftTarget;  // Yaw when mouse is far left
-            float yawRightTarget; // Yaw when mouse is far right
+            float yawLeftTarget;
+            float yawRightTarget;
 
             if (Immersive2DClient.turnedAround.isPressed()) {
                 // If turned around, player faces South (0 degrees)
                 lerpFactor = (float) MathHelper.clamp(3. * mouse.immersive2d$getNormalizedX() + 0.5, 0, 1);
-                yawLeftTarget = (float) (basePlaneYawDegrees + 0.0F + 20.0F); // Slightly right of "South"
-                yawRightTarget = (float) (basePlaneYawDegrees + 0.0F - 20.0F); // Slightly left of "South"
+                yawLeftTarget = (float) (basePlaneYawDegrees + 80.0F);
+                yawRightTarget = (float) (basePlaneYawDegrees - 80.0F);
             } else {
                 // Default: player faces North (180 degrees)
                 lerpFactor = (float) MathHelper.clamp(7 * mouse.immersive2d$getNormalizedX() + 0.5, 0, 1);
-                yawLeftTarget = (float) (basePlaneYawDegrees + 180.0F - 20.0F); // Slightly left of "North"
-                yawRightTarget = (float) (basePlaneYawDegrees + 180.0F + 20.0F); // Slightly right of "North"
+                yawLeftTarget = (float) (basePlaneYawDegrees + 180.0F - 80.0F);
+                yawRightTarget = (float) (basePlaneYawDegrees + 180.0F + 80.0F);
             }
 
             // Apply the lerp to get the final player body yaw

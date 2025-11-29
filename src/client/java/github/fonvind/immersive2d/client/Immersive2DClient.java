@@ -52,6 +52,6 @@ public class Immersive2DClient implements ClientModInitializer {
         // Commenting out shader registration
         // PostWorldRenderCallbackV3.EVENT.register(Immersive2DShaders.INSTANCE);
         // ShaderEffectRenderCallback.EVENT.register(Immersive2DShaders.INSTANCE);
-        Immersive2DCrosshairRenderer.intialize();
+        // Immersive2DCrosshairRenderer.intialize(); // Commented out to prevent FileNotFoundException
     }
 }

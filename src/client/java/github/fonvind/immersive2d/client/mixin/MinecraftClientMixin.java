@@ -1,5 +1,6 @@
 package github.fonvind.immersive2d.client.mixin;
 
+import github.fonvind.immersive2d.client.Immersive2DRaycaster;
 import github.fonvind.immersive2d.client.Immersive2DClient;
 import github.fonvind.immersive2d.utils.Plane;
 import net.minecraft.client.MinecraftClient;

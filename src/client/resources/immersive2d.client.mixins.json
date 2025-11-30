@@ -24,6 +24,5 @@
   "overwrites": {
     "requireAnnotations": true
   },
-  "mixins": [
-  ]
+  "mixins": []
 }

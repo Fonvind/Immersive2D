@@ -1,6 +1,7 @@
 package github.fonvind.immersive2d.client;
 
 import github.fonvind.immersive2d.Immersive2D;
+import github.fonvind.immersive2d.client.rendering.Immersive2DCrosshairRenderer;
 import github.fonvind.immersive2d.access.EntityPlaneGetterSetter;
 import github.fonvind.immersive2d.utils.Plane;
 import net.fabricmc.api.ClientModInitializer;
@@ -50,6 +51,6 @@ public class Immersive2DClient implements ClientModInitializer {
         // Commenting out shader registration
         // PostWorldRenderCallbackV3.EVENT.register(Immersive2DShaders.INSTANCE);
         // ShaderEffectRenderCallback.EVENT.register(Immersive2DShaders.INSTANCE);
-        // Immersive2DCrosshairRenderer.intialize(); // Commented out to prevent FileNotFoundException
+        Immersive2DCrosshairRenderer.intialize();
     }
 }

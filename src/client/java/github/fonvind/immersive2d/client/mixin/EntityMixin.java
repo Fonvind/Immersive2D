@@ -19,31 +19,28 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class EntityMixin {
     @Shadow private @Nullable Entity vehicle;
     @Shadow public float prevPitch;
-
     @Shadow public abstract float getPitch();
-
     @Shadow public float prevYaw;
-
     @Shadow public abstract float getYaw();
-
     @Shadow public abstract void setPitch(float pitch);
-
     @Shadow public abstract void setYaw(float yaw);
-
     @Shadow public abstract BlockPos getBlockPos();
 
     @Inject(method = "changeLookDirection", at = @At("HEAD"), cancellable = true)
     public void changeLookDirection(double cursorDeltaX, double cursorDeltaY, CallbackInfo ci) {
         Plane plane = Immersive2DClient.plane;
-        if (plane != null) {
+        if (plane != null && (Object)this == MinecraftClient.getInstance().player) {
             this.prevPitch = this.getPitch();
             this.prevYaw = this.getYaw();
 
             MouseNormalizedGetter mouse = (MouseNormalizedGetter) MinecraftClient.getInstance().mouse;
 
-            // --- Player Head Pitch Aiming Logic (Simplified & Corrected Inversion) ---
-            float pitchSensitivity = 45.0F;
-            float playerPitch = (float) (-mouse.immersive2d$getNormalizedY() * pitchSensitivity);
+            // --- Player Head Pitch Aiming Logic (Trigonometrically Correct) ---
+            float maxPitchAngle = 80.0F; // Changed to 80 degrees for testing
+            double tanOfMaxAngle = Math.tan(Math.toRadians(maxPitchAngle));
+            // Use atan to convert linear screen-space mouse position to correct angle-space rotation
+            // Re-added the negative sign to correct the inverted controls
+            float playerPitch = (float) -Math.toDegrees(Math.atan(mouse.immersive2d$getNormalizedY() * tanOfMaxAngle));
             this.setPitch(MathHelper.clamp(playerPitch, -90, 90));
 
             // --- Player Body Yaw Logic (Smooth Adjustment based on Mouse X) ---

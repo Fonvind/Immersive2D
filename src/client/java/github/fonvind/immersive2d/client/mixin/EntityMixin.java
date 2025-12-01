@@ -60,30 +60,39 @@ public abstract class EntityMixin {
             // --- Pitch (Y-Axis) ---
             float maxPitchAngle = 75.0F;
             // Map mouse Y from [-1, 1] to a lerp factor of [0, 1]
+            // processedMouseY: -1 (top) to 1 (bottom)
+            // We want: -maxPitchAngle (top) to maxPitchAngle (bottom)
+            // So lerpFactor should be 0 at top, 1 at bottom.
             float pitchLerpFactor = (float) (processedMouseY * sensitivity * 0.5 + 0.5);
-            // Lerp between the max down angle and max up angle
-            float playerPitch = MathHelper.lerp(pitchLerpFactor, maxPitchAngle, -maxPitchAngle);
+            // Lerp between the max up angle and max down angle
+            float playerPitch = MathHelper.lerp(pitchLerpFactor, -maxPitchAngle, maxPitchAngle);
             this.setPitch(playerPitch);
 
             // --- Yaw (X-Axis) ---
             float maxYawAngle = 75.0F;
             double basePlaneYawDegrees = Math.toDegrees(plane.getYaw());
             // Map mouse X from [-1, 1] to a lerp factor of [0, 1]
+            // processedMouseX: -1 (left) to 1 (right)
+            // We want: left turn (left) to right turn (right)
+            // So lerpFactor should be 0 at left, 1 at right.
             float yawLerpFactor = (float) (processedMouseX * sensitivity * 0.5 + 0.5);
             float yawLeftTarget;
             float yawRightTarget;
 
             if (Immersive2DClient.turnedAround.isPressed()) {
                 // If turned around, player faces South (0 degrees)
+                // Left turn is positive yaw, Right turn is negative yaw
                 yawLeftTarget = (float) (basePlaneYawDegrees + maxYawAngle);
                 yawRightTarget = (float) (basePlaneYawDegrees - maxYawAngle);
             } else {
                 // Default: player faces North (180 degrees)
+                // Left turn is 180 - yaw, Right turn is 180 + yaw
                 yawLeftTarget = (float) (basePlaneYawDegrees + 180.0F - maxYawAngle);
                 yawRightTarget = (float) (basePlaneYawDegrees + 180.0F + maxYawAngle);
             }
 
-            this.setYaw(MathHelper.lerp(yawLerpFactor, yawLeftTarget, yawRightTarget));
+            // Corrected: Swap lerp targets to match the new "positive X is right" coordinate system.
+            this.setYaw(MathHelper.lerp(yawLerpFactor, yawRightTarget, yawLeftTarget));
 
             if (this.vehicle != null) {
                 this.vehicle.onPassengerLookAround((Entity) (Object) this);

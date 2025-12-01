@@ -34,64 +34,57 @@ public abstract class EntityMixin {
             this.prevPitch = this.getPitch();
             this.prevYaw = this.getYaw();
 
+            // --- TUNING PARAMETERS ---
+            final float maxPitchAngle = 75.0F; // Max angle player can look up/down
+            final float maxYawAngle = 75.0F;   // Max angle player can turn left/right from center
+            final double aimingSquarePercentage = 0.8; // Use 1.0 for 100%, 0.7 for 70%, etc.
+            final double baseSensitivity = 1.0; // Adjusts overall sensitivity. 1.1 = 10% more, 0.9 = 10% less.
+            // --- END TUNING PARAMETERS ---
+
             Mouse mouse = client.mouse;
 
             // --- "Aiming Square" Logic ---
             double windowWidth = client.getWindow().getWidth();
             double windowHeight = client.getWindow().getHeight();
             double smallestDimension = Math.min(windowWidth, windowHeight);
-            double aimingSquareSize = smallestDimension * 1.0; // Using 100% for now
+            double aimingSquareSize = smallestDimension * aimingSquarePercentage; 
 
-            // Get mouse position relative to the center of the screen
             double mouseXFromCenter = mouse.getX() - (windowWidth / 2.0);
             double mouseYFromCenter = mouse.getY() - (windowHeight / 2.0);
 
-            // Normalize mouse position based on the aiming square's size
             double processedMouseX = mouseXFromCenter / (aimingSquareSize / 2.0);
             double processedMouseY = mouseYFromCenter / (aimingSquareSize / 2.0);
 
-            // Clamp the input to the -1.0 to 1.0 range
+            // --- FOV-Compensated Sensitivity ---
+            double currentFov = client.options.getFov().getValue();
+            double referenceFov = 70.0;
+            double fovScale = Math.tan(Math.toRadians(currentFov / 2.0)) / Math.tan(Math.toRadians(referenceFov / 2.0));
+            
+            processedMouseX *= fovScale * baseSensitivity;
+            processedMouseY *= fovScale * baseSensitivity;
+
             processedMouseX = MathHelper.clamp(processedMouseX, -1.0, 1.0);
             processedMouseY = MathHelper.clamp(processedMouseY, -1.0, 1.0);
 
-            // --- Consistent Lerp-based Aiming Logic for Both Axes ---
-            float sensitivity = 1.0f; // Neutral sensitivity multiplier
-
             // --- Pitch (Y-Axis) ---
-            float maxPitchAngle = 75.0F;
-            // Map mouse Y from [-1, 1] to a lerp factor of [0, 1]
-            // processedMouseY: -1 (top) to 1 (bottom)
-            // We want: -maxPitchAngle (top) to maxPitchAngle (bottom)
-            // So lerpFactor should be 0 at top, 1 at bottom.
-            float pitchLerpFactor = (float) (processedMouseY * sensitivity * 0.5 + 0.5);
-            // Lerp between the max up angle and max down angle
+            float pitchLerpFactor = (float) (processedMouseY * 0.5 + 0.5);
             float playerPitch = MathHelper.lerp(pitchLerpFactor, -maxPitchAngle, maxPitchAngle);
             this.setPitch(playerPitch);
 
             // --- Yaw (X-Axis) ---
-            float maxYawAngle = 75.0F;
             double basePlaneYawDegrees = Math.toDegrees(plane.getYaw());
-            // Map mouse X from [-1, 1] to a lerp factor of [0, 1]
-            // processedMouseX: -1 (left) to 1 (right)
-            // We want: left turn (left) to right turn (right)
-            // So lerpFactor should be 0 at left, 1 at right.
-            float yawLerpFactor = (float) (processedMouseX * sensitivity * 0.5 + 0.5);
+            float yawLerpFactor = (float) (processedMouseX * 0.5 + 0.5);
             float yawLeftTarget;
             float yawRightTarget;
 
             if (Immersive2DClient.turnedAround.isPressed()) {
-                // If turned around, player faces South (0 degrees)
-                // Left turn is positive yaw, Right turn is negative yaw
                 yawLeftTarget = (float) (basePlaneYawDegrees + maxYawAngle);
                 yawRightTarget = (float) (basePlaneYawDegrees - maxYawAngle);
             } else {
-                // Default: player faces North (180 degrees)
-                // Left turn is 180 - yaw, Right turn is 180 + yaw
                 yawLeftTarget = (float) (basePlaneYawDegrees + 180.0F - maxYawAngle);
                 yawRightTarget = (float) (basePlaneYawDegrees + 180.0F + maxYawAngle);
             }
 
-            // Corrected: Swap lerp targets to match the new "positive X is right" coordinate system.
             this.setYaw(MathHelper.lerp(yawLerpFactor, yawRightTarget, yawLeftTarget));
 
             if (this.vehicle != null) {

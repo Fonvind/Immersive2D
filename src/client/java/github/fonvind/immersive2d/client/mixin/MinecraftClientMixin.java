@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MinecraftClient.class)
-public class MinecraftClientMixin {
+public abstract class MinecraftClientMixin {
     @Shadow @Final private Window window;
     @Shadow @Final public Mouse mouse;
 
@@ -26,7 +26,7 @@ public class MinecraftClientMixin {
         if (Immersive2DClient.plane == null) return;
         if (!(this.mouse instanceof MouseNormalizedGetter getter)) return;
 
-        // Restore the cursor position
+        // Restore the cursor's pixel position using the saved normalized coordinates
         double normX = getter.immersive2d$getNormalizedX();
         double normY = getter.immersive2d$getNormalizedY();
         double windowWidth = this.window.getWidth();
@@ -34,7 +34,6 @@ public class MinecraftClientMixin {
 
         double x = (windowWidth / 2.0) - (normX * (windowWidth / 2.0));
         double y = (windowHeight / 2.0) - (normY * (windowHeight / 2.0));
-
         long handle = this.window.getHandle();
 
         int inputMode = (screen == null)
@@ -45,20 +44,33 @@ public class MinecraftClientMixin {
             InputUtil.setCursorParameters(handle, inputMode, x, y);
         } catch (Throwable ignored) {}
 
-        // Fire synthetic cursor movement
+        // Fire synthetic cursor event so GLFW state is closer to correct
         if (screen == null) {
             try {
                 ((MouseInvoker) this.mouse).invokeOnCursorPos(handle, x, y);
             } catch (Throwable ignored) {}
         }
 
-        // --- THE FIX: Immediately force an aiming update this frame ---
-        if (screen == null) { // Transitioning FROM UI → game world
-            MinecraftClient client = (MinecraftClient) (Object) this;
-            if (client.player != null) {
-                // Triggers your EntityMixin’s changeLookDirection injection
-                client.player.changeLookDirection(0.0, 0.0);
-            }
+        // Set a flag so the next tick (after mouse.updateMouse()) will force one look update.
+        if (screen == null) {
+            Immersive2DClient.forceNextLookUpdate = true;
         }
+    }
+
+    // Keep your existing tick-based forcing (runs after mouse.updateMouse in tick)
+    @Inject(method = "tick", at = @At("TAIL"))
+    private void immersive2d$forceInitialLookAfterScreenClose(CallbackInfo ci) {
+        if (!Immersive2DClient.forceNextLookUpdate) return;
+
+        MinecraftClient client = (MinecraftClient) (Object) this;
+        if (client.player == null) {
+            Immersive2DClient.forceNextLookUpdate = false;
+            return;
+        }
+
+        // This runs after mouse.updateMouse() while still in the tick phase:
+        client.player.changeLookDirection(0.0, 0.0);
+
+        Immersive2DClient.forceNextLookUpdate = false;
     }
 }

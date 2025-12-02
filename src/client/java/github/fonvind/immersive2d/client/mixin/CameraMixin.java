@@ -22,7 +22,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class CameraMixin {
     @Unique
     double immersive2d$xMouseOffset = 0;
-
     @Unique
     double immersive2d$yMouseOffset = 0;
 
@@ -31,52 +30,57 @@ public abstract class CameraMixin {
     @Shadow private final Vector3f horizontalPlane = new Vector3f();
     @Shadow private final Vector3f verticalPlane = new Vector3f();
 
-
     @Shadow protected abstract void setPos(double x, double y, double z);
-
     @Shadow protected abstract void setRotation(float yaw, float pitch);
 
-    @Inject(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setRotation(FF)V"), cancellable = true)
+    @Inject(method = "update", at = @At("TAIL"))
     public void update(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
         Plane plane = Immersive2DClient.plane;
-        if (plane != null) {
-            this.thirdPerson = true;
+        if (plane == null) return;
 
-            this.setRotation((float) (plane.getYaw() * MathHelper.DEGREES_PER_RADIAN), 0);
+        MinecraftClient mc = MinecraftClient.getInstance();
+        PlayerEntity player = mc.player;
+        if (player == null || focusedEntity == null) return;
 
-            Vec3d pos = new Vec3d(MathHelper.lerp(tickDelta, focusedEntity.prevX, focusedEntity.getX()), MathHelper.lerp(tickDelta, focusedEntity.prevY, focusedEntity.getY()) + focusedEntity.getStandingEyeHeight(), MathHelper.lerp(tickDelta, focusedEntity.prevZ, focusedEntity.getZ()));
-            this.setPos(pos.x, pos.y, pos.z);
+        // Force third-person camera for the plane effect
+        this.thirdPerson = true;
 
-            MouseNormalizedGetter mouse = (MouseNormalizedGetter) MinecraftClient.getInstance().mouse;
+        // --- RESTORED LOGIC ---
+        // Force the camera's rotation to be parallel to the 2D plane, ignoring player rotation.
+        // This is the key to the fixed side-scroller perspective.
+        this.setRotation((float) (plane.getYaw() * MathHelper.DEGREES_PER_RADIAN), 0);
 
-            float mouseOffsetScale = immersive2d$getMouseOffsetScale(MinecraftClient.getInstance().player);
-            double delta = 0.2 - (0.15 * mouseOffsetScale/40);
+        // Compute base camera position at the player's eye (interpolated)
+        Vec3d lerpedPos = new Vec3d(
+                MathHelper.lerp(tickDelta, focusedEntity.prevX, focusedEntity.getX()),
+                MathHelper.lerp(tickDelta, focusedEntity.prevY, focusedEntity.getY()) + focusedEntity.getStandingEyeHeight(),
+                MathHelper.lerp(tickDelta, focusedEntity.prevZ, focusedEntity.getZ())
+        );
+        this.setPos(lerpedPos.x, lerpedPos.y, lerpedPos.z);
 
-            immersive2d$xMouseOffset = MathHelper.lerp(delta, immersive2d$xMouseOffset, mouse.immersive2d$getNormalizedX() * mouseOffsetScale);
-            immersive2d$yMouseOffset = MathHelper.lerp(delta, immersive2d$yMouseOffset, mouse.immersive2d$getNormalizedY() * mouseOffsetScale);
+        // --- Mouse-driven offset smoothing (same behaviour as before) ---
+        MouseNormalizedGetter mouse = (MouseNormalizedGetter) mc.mouse;
+        float mouseOffsetScale = immersive2d$getMouseOffsetScale(player);
+        double smoothingDelta = 0.2 - (0.15 * mouseOffsetScale / 40.0);
 
-            // Correctly calculate the backward vector
-            Vector3f backward = new Vector3f(this.verticalPlane).cross(this.horizontalPlane);
-            backward.normalize();
+        immersive2d$xMouseOffset = MathHelper.lerp(smoothingDelta, immersive2d$xMouseOffset, mouse.immersive2d$getNormalizedX() * mouseOffsetScale);
+        immersive2d$yMouseOffset = MathHelper.lerp(smoothingDelta, immersive2d$yMouseOffset, mouse.immersive2d$getNormalizedY() * mouseOffsetScale);
 
-            // Apply movement based on the original moveBy(x, y, z) logic, with inverted side-to-side movement
-            this.setPos(
-                    this.pos.x + backward.x() * immersive2d$xMouseOffset + this.verticalPlane.x() * immersive2d$yMouseOffset + this.horizontalPlane.x() * -8,
-                    this.pos.y + backward.y() * immersive2d$xMouseOffset + this.verticalPlane.y() * immersive2d$yMouseOffset + this.horizontalPlane.y() * -8,
-                    this.pos.z + backward.z() * immersive2d$xMouseOffset + this.verticalPlane.z() * immersive2d$yMouseOffset + this.horizontalPlane.z() * -8
-            );
+        // Calculate backward vector for offset application
+        Vector3f backward = new Vector3f(this.verticalPlane).cross(this.horizontalPlane);
+        backward.normalize();
 
-
-            ci.cancel();
-        }
+        // Keep the fixed -8 offset (8 blocks back) while applying mouse offsets.
+        this.setPos(
+                this.pos.x + backward.x() * immersive2d$xMouseOffset + this.verticalPlane.x() * immersive2d$yMouseOffset + this.horizontalPlane.x() * -8,
+                this.pos.y + backward.y() * immersive2d$xMouseOffset + this.verticalPlane.y() * immersive2d$yMouseOffset + this.horizontalPlane.y() * -8,
+                this.pos.z + backward.z() * immersive2d$xMouseOffset + this.verticalPlane.z() * immersive2d$yMouseOffset + this.horizontalPlane.z() * -8
+        );
     }
 
     @Unique
     private float immersive2d$getMouseOffsetScale(PlayerEntity player) {
-        if (player == null || !player.isUsingItem()) {
-            return 1;
-        }
-
+        if (player == null || !player.isUsingItem()) return 1;
         return switch (player.getActiveItem().getItem().getTranslationKey()) {
             case "item.minecraft.bow" -> 10;
             case "item.minecraft.spyglass" -> 40;

@@ -21,6 +21,7 @@ public class Immersive2DClient implements ClientModInitializer {
             "keyGroup.immersive2d"
     ));
 
+    public static boolean forceNextLookUpdate = false;
     private boolean shouldUpdatePlane = true;
 
     @Override

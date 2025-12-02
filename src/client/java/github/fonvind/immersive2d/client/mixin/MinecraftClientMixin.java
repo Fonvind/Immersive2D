@@ -24,12 +24,11 @@ public class MinecraftClientMixin {
     @Inject(method = "setScreen", at = @At("TAIL"))
     private void immersive2d$restoreCursorAfterSetScreen(Screen screen, CallbackInfo ci) {
         if (Immersive2DClient.plane == null) return;
-
         if (!(this.mouse instanceof MouseNormalizedGetter getter)) return;
 
+        // Restore the cursor position
         double normX = getter.immersive2d$getNormalizedX();
         double normY = getter.immersive2d$getNormalizedY();
-
         double windowWidth = this.window.getWidth();
         double windowHeight = this.window.getHeight();
 
@@ -38,22 +37,28 @@ public class MinecraftClientMixin {
 
         long handle = this.window.getHandle();
 
-        int inputMode;
-        if (screen == null) {
-            inputMode = GLFW.GLFW_CURSOR_DISABLED;
-        } else {
-            inputMode = GLFW.GLFW_CURSOR_NORMAL;
-        }
+        int inputMode = (screen == null)
+                ? GLFW.GLFW_CURSOR_DISABLED
+                : GLFW.GLFW_CURSOR_NORMAL;
 
         try {
             InputUtil.setCursorParameters(handle, inputMode, x, y);
         } catch (Throwable ignored) {}
 
+        // Fire synthetic cursor movement
         if (screen == null) {
             try {
-                // Use the invoker to safely call the private method
                 ((MouseInvoker) this.mouse).invokeOnCursorPos(handle, x, y);
             } catch (Throwable ignored) {}
+        }
+
+        // --- THE FIX: Immediately force an aiming update this frame ---
+        if (screen == null) { // Transitioning FROM UI → game world
+            MinecraftClient client = (MinecraftClient) (Object) this;
+            if (client.player != null) {
+                // Triggers your EntityMixin’s changeLookDirection injection
+                client.player.changeLookDirection(0.0, 0.0);
+            }
         }
     }
 }

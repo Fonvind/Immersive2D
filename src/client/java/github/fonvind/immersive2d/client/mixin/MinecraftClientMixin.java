@@ -1,6 +1,7 @@
 package github.fonvind.immersive2d.client.mixin;
 
 import github.fonvind.immersive2d.client.Immersive2DClient;
+import github.fonvind.immersive2d.client.access.MouseInvoker;
 import github.fonvind.immersive2d.client.access.MouseNormalizedGetter;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
@@ -24,15 +25,11 @@ public class MinecraftClientMixin {
     private void immersive2d$restoreCursorAfterSetScreen(Screen screen, CallbackInfo ci) {
         if (Immersive2DClient.plane == null) return;
 
-        if (!(this.mouse instanceof MouseNormalizedGetter)) return;
-        MouseNormalizedGetter getter = (MouseNormalizedGetter) this.mouse;
+        if (!(this.mouse instanceof MouseNormalizedGetter getter)) return;
 
-        // The getter gives a value from -1 to 1. We need to convert it back to pixel coordinates.
-        // The old normalization was: (width - this.x) / width
-        // So, to reverse it: this.x = width - (normalizedX * width)
         double normX = getter.immersive2d$getNormalizedX();
         double normY = getter.immersive2d$getNormalizedY();
-        
+
         double windowWidth = this.window.getWidth();
         double windowHeight = this.window.getHeight();
 
@@ -40,14 +37,23 @@ public class MinecraftClientMixin {
         double y = (windowHeight / 2.0) - (normY * (windowHeight / 2.0));
 
         long handle = this.window.getHandle();
-        
-        // When a screen is open, the cursor should be visible and normal.
-        int inputMode = GLFW.GLFW_CURSOR_NORMAL;
+
+        int inputMode;
+        if (screen == null) {
+            inputMode = GLFW.GLFW_CURSOR_DISABLED;
+        } else {
+            inputMode = GLFW.GLFW_CURSOR_NORMAL;
+        }
 
         try {
             InputUtil.setCursorParameters(handle, inputMode, x, y);
-        } catch (Throwable t) {
-            // Don't crash if something goes wrong
+        } catch (Throwable ignored) {}
+
+        if (screen == null) {
+            try {
+                // Use the invoker to safely call the private method
+                ((MouseInvoker) this.mouse).invokeOnCursorPos(handle, x, y);
+            } catch (Throwable ignored) {}
         }
     }
 }

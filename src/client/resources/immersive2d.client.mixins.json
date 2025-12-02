@@ -16,7 +16,8 @@
     "MouseMixin",
     "TerrainRenderContextMixin",
     "WorldRendererMixin",
-    "GameRendererMixin"
+    "GameRendererMixin",
+    "MinecraftClientMixin"
   ],
   "injectors": {
     "defaultRequire": 1

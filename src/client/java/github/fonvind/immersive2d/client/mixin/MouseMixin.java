@@ -27,20 +27,6 @@ public class MouseMixin implements MouseNormalizedGetter {
     @Unique
     private Double immersive2d$normalizedY = 0d;
 
-    /**
-     * Injects at the head of onScreenSet and cancels the method if our 2D plane is active.
-     * This prevents Minecraft from resetting the mouse cursor to the center of the screen
-     * every time a UI (inventory, chest, menu, etc.) is opened.
-     */
-    @Inject(method = "onScreenSet", at = @At("HEAD"), cancellable = true)
-    private void immersive2d$preventMouseReset(int width, int height, CallbackInfo ci) {
-        if (Immersive2DClient.plane != null) {
-            // If our 2D mode is active, cancel the entire method to prevent the
-            // cursor from being centered.
-            ci.cancel();
-        }
-    }
-
     @Override
     public double immersive2d$getNormalizedX() {
         return Objects.requireNonNullElse(immersive2d$normalizedX, 0d);

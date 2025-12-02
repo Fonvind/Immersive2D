@@ -42,12 +42,10 @@ public abstract class CameraMixin {
         PlayerEntity player = mc.player;
         if (player == null || focusedEntity == null) return;
 
-        // Force third-person camera for the plane effect
         this.thirdPerson = true;
 
         // --- RESTORED LOGIC ---
         // Force the camera's rotation to be parallel to the 2D plane, ignoring player rotation.
-        // This is the key to the fixed side-scroller perspective.
         this.setRotation((float) (plane.getYaw() * MathHelper.DEGREES_PER_RADIAN), 0);
 
         // Compute base camera position at the player's eye (interpolated)

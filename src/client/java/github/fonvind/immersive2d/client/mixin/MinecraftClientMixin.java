@@ -26,7 +26,6 @@ public abstract class MinecraftClientMixin {
         if (Immersive2DClient.plane == null) return;
         if (!(this.mouse instanceof MouseNormalizedGetter getter)) return;
 
-        // Compute pixel coordinates from stored normalized coordinates
         double normX = getter.immersive2d$getNormalizedX();
         double normY = getter.immersive2d$getNormalizedY();
         double windowWidth = this.window.getWidth();
@@ -41,34 +40,25 @@ public abstract class MinecraftClientMixin {
             InputUtil.setCursorParameters(handle, inputMode, x, y);
         } catch (Throwable ignored) {}
 
-        // Fire synthetic cursor event (GLFW) so native state is consistent
         if (screen == null) {
             try {
                 ((MouseInvoker) this.mouse).invokeOnCursorPos(handle, x, y);
             } catch (Throwable ignored) {}
-            // Schedule a single forced look update for the next tick after mouse.updateMouse() runs
             Immersive2DClient.forceNextLookUpdate = true;
         }
     }
 
-    /**
-     * Force the player's aim update on the tick AFTER the screen closes.
-     * This runs at the TAIL of tick: after input/mouse.updateMouse logic.
-     */
     @Inject(method = "tick", at = @At("TAIL"))
     private void immersive2d$forceInitialLookAfterScreenClose(CallbackInfo ci) {
         if (!Immersive2DClient.forceNextLookUpdate) return;
+        
         MinecraftClient client = (MinecraftClient) (Object) this;
         if (client.player == null) {
             Immersive2DClient.forceNextLookUpdate = false;
             return;
         }
 
-        // Now that mouse.x/mouse.y were updated, trigger the player's aiming logic,
-        // which reads absolute mouse coords. changeLookDirection is cancellable and
-        // will run your EntityMixin logic.
         client.player.changeLookDirection(0.0, 0.0);
-
         Immersive2DClient.forceNextLookUpdate = false;
     }
 }

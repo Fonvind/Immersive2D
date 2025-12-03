@@ -32,6 +32,7 @@ public abstract class CameraMixin {
 
     @Shadow protected abstract void setPos(double x, double y, double z);
     @Shadow protected abstract void setRotation(float yaw, float pitch);
+    @Shadow public abstract float getYaw();
 
     @Inject(method = "update", at = @At("TAIL"))
     public void update(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
@@ -44,11 +45,8 @@ public abstract class CameraMixin {
 
         this.thirdPerson = true;
 
-        // --- RESTORED LOGIC ---
-        // Force the camera's rotation to be parallel to the 2D plane, ignoring player rotation.
         this.setRotation((float) (plane.getYaw() * MathHelper.DEGREES_PER_RADIAN), 0);
 
-        // Compute base camera position at the player's eye (interpolated)
         Vec3d lerpedPos = new Vec3d(
                 MathHelper.lerp(tickDelta, focusedEntity.prevX, focusedEntity.getX()),
                 MathHelper.lerp(tickDelta, focusedEntity.prevY, focusedEntity.getY()) + focusedEntity.getStandingEyeHeight(),
@@ -56,7 +54,6 @@ public abstract class CameraMixin {
         );
         this.setPos(lerpedPos.x, lerpedPos.y, lerpedPos.z);
 
-        // --- Mouse-driven offset smoothing (same behaviour as before) ---
         MouseNormalizedGetter mouse = (MouseNormalizedGetter) mc.mouse;
         float mouseOffsetScale = immersive2d$getMouseOffsetScale(player);
         double smoothingDelta = 0.2 - (0.15 * mouseOffsetScale / 40.0);
@@ -64,11 +61,9 @@ public abstract class CameraMixin {
         immersive2d$xMouseOffset = MathHelper.lerp(smoothingDelta, immersive2d$xMouseOffset, mouse.immersive2d$getNormalizedX() * mouseOffsetScale);
         immersive2d$yMouseOffset = MathHelper.lerp(smoothingDelta, immersive2d$yMouseOffset, mouse.immersive2d$getNormalizedY() * mouseOffsetScale);
 
-        // Calculate backward vector for offset application
         Vector3f backward = new Vector3f(this.verticalPlane).cross(this.horizontalPlane);
         backward.normalize();
 
-        // Keep the fixed -8 offset (8 blocks back) while applying mouse offsets.
         this.setPos(
                 this.pos.x + backward.x() * immersive2d$xMouseOffset + this.verticalPlane.x() * immersive2d$yMouseOffset + this.horizontalPlane.x() * -8,
                 this.pos.y + backward.y() * immersive2d$xMouseOffset + this.verticalPlane.y() * immersive2d$yMouseOffset + this.horizontalPlane.y() * -8,

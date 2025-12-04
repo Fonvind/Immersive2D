@@ -45,13 +45,11 @@ public class Immersive2DClient implements ClientModInitializer {
                 client.worldRenderer.reload();
                 shouldUpdatePlane = false;
 
-                MinecraftClient.getInstance().mouse.lockCursor();
+                // Set the cursor to unlocked so our mixin can take over and hide it.
+                MinecraftClient.getInstance().mouse.unlockCursor();
             }
         }));
 
-        // Commenting out shader registration
-        // PostWorldRenderCallbackV3.EVENT.register(Immersive2DShaders.INSTANCE);
-        // ShaderEffectRenderCallback.EVENT.register(Immersive2DShaders.INSTANCE);
         Immersive2DCrosshairRenderer.initialize();
     }
 }

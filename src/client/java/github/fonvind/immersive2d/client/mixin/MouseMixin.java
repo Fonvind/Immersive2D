@@ -16,8 +16,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Objects;
-
 @Mixin(Mouse.class)
 public class MouseMixin implements MouseNormalizedGetter {
 
@@ -26,9 +24,9 @@ public class MouseMixin implements MouseNormalizedGetter {
     @Shadow private double y;
 
     @Unique
-    private Double immersive2d$normalizedX = 0d;
+    private double immersive2d$normalizedX = 0.0;
     @Unique
-    private Double immersive2d$normalizedY = 0d;
+    private double immersive2d$normalizedY = 0.0;
 
     @Inject(method = "updateMouse", at = @At("HEAD"))
     public void immersive2d$clampAndNormalize(CallbackInfo ci) {
@@ -43,8 +41,7 @@ public class MouseMixin implements MouseNormalizedGetter {
             this.x = MathHelper.clamp(this.x, 0.0, windowW);
             this.y = MathHelper.clamp(this.y, 0.0, windowH);
 
-            // If the coordinates were changed, it means the hardware cursor was out of bounds.
-            // Force the hardware cursor to jump back to the clamped position.
+            // If the coordinates were changed, force the hardware cursor to jump back.
             if (this.x != oldX || this.y != oldY) {
                 GLFW.glfwSetCursorPos(this.client.getWindow().getHandle(), this.x, this.y);
             }
@@ -55,21 +52,16 @@ public class MouseMixin implements MouseNormalizedGetter {
         double halfH = this.client.getWindow().getHeight() / 2.0;
         immersive2d$normalizedX = (halfW - this.x) / halfW;
         immersive2d$normalizedY = (halfH - this.y) / halfH;
-
-        if (immersive2d$normalizedX.isNaN() || immersive2d$normalizedX.isInfinite())
-            immersive2d$normalizedX = 0d;
-        if (immersive2d$normalizedY.isNaN() || immersive2d$normalizedY.isInfinite())
-            immersive2d$normalizedY = 0d;
     }
 
     @Override
     public double immersive2d$getNormalizedX() {
-        return Objects.requireNonNullElse(immersive2d$normalizedX, 0d);
+        return immersive2d$normalizedX;
     }
 
     @Override
     public double immersive2d$getNormalizedY() {
-        return Objects.requireNonNullElse(immersive2d$normalizedY, 0d);
+        return immersive2d$normalizedY;
     }
 
     @WrapWithCondition(

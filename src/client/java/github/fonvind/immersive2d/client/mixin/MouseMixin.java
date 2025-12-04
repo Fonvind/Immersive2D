@@ -6,6 +6,7 @@ import github.fonvind.immersive2d.client.access.MouseNormalizedGetter;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.util.math.MathHelper;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,17 +30,31 @@ public class MouseMixin implements MouseNormalizedGetter {
     @Unique
     private Double immersive2d$normalizedY = 0d;
 
-    // ============================================================
-    // NORMALIZED MOUSE POSITION FOR CAMERA MIXIN
-    // ============================================================
-
     @Inject(method = "updateMouse", at = @At("HEAD"))
-    public void immersive2d$updateNormalizedPos(CallbackInfo ci) {
-        double w = client.getWindow().getWidth() / 2f;
-        double h = client.getWindow().getHeight() / 2f;
+    public void immersive2d$clampAndNormalize(CallbackInfo ci) {
+        if (Immersive2DClient.plane != null) {
+            double windowW = this.client.getWindow().getWidth();
+            double windowH = this.client.getWindow().getHeight();
 
-        immersive2d$normalizedX = (w - this.x) / w;
-        immersive2d$normalizedY = (h - this.y) / h;
+            double oldX = this.x;
+            double oldY = this.y;
+
+            // Clamp the internal software coordinates
+            this.x = MathHelper.clamp(this.x, 0.0, windowW);
+            this.y = MathHelper.clamp(this.y, 0.0, windowH);
+
+            // If the coordinates were changed, it means the hardware cursor was out of bounds.
+            // Force the hardware cursor to jump back to the clamped position.
+            if (this.x != oldX || this.y != oldY) {
+                GLFW.glfwSetCursorPos(this.client.getWindow().getHandle(), this.x, this.y);
+            }
+        }
+
+        // Compute normalized coordinates for camera / renderer usage (center-based).
+        double halfW = this.client.getWindow().getWidth() / 2.0;
+        double halfH = this.client.getWindow().getHeight() / 2.0;
+        immersive2d$normalizedX = (halfW - this.x) / halfW;
+        immersive2d$normalizedY = (halfH - this.y) / halfH;
 
         if (immersive2d$normalizedX.isNaN() || immersive2d$normalizedX.isInfinite())
             immersive2d$normalizedX = 0d;
@@ -57,49 +72,27 @@ public class MouseMixin implements MouseNormalizedGetter {
         return Objects.requireNonNullElse(immersive2d$normalizedY, 0d);
     }
 
-    // ============================================================
-    // FORCE CURSOR CONFINE WHEN PLANE IS ACTIVE
-    // ============================================================
-
-    /**
-     * Prevent Minecraft from *unlocking* or *showing* the hardware cursor.
-     * Forces cursor into GLFW_CURSOR_DISABLED (confined) mode.
-     */
     @WrapWithCondition(
             method = "lockCursor",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/util/InputUtil;setCursorParameters(JIDD)V"
-            )
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/InputUtil;setCursorParameters(JIDD)V")
     )
     private boolean immersive2d$overrideLockCursor(long handle, int mode, double x, double y) {
-
         if (Immersive2DClient.plane != null) {
-            // Force hardware cursor into confined mode
-            InputUtil.setCursorParameters(handle, GLFW.GLFW_CURSOR_DISABLED, 0, 0);
-            return false; // prevent vanilla call
+            InputUtil.setCursorParameters(handle, GLFW.GLFW_CURSOR_CAPTURED, 0, 0);
+            return false;
         }
-
         return true;
     }
 
-    /**
-     * Prevent Minecraft from *unlocking* the cursor on GUI events.
-     */
     @WrapWithCondition(
             method = "unlockCursor",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/util/InputUtil;setCursorParameters(JIDD)V"
-            )
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/InputUtil;setCursorParameters(JIDD)V")
     )
     private boolean immersive2d$blockUnlock(long handle, int mode, double x, double y) {
-
         if (Immersive2DClient.plane != null) {
-            InputUtil.setCursorParameters(handle, GLFW.GLFW_CURSOR_DISABLED, 0, 0);
-            return false; // block unlock
+            InputUtil.setCursorParameters(handle, GLFW.GLFW_CURSOR_CAPTURED, 0, 0);
+            return false;
         }
-
         return true;
     }
 }

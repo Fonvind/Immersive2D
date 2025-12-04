@@ -1,9 +1,9 @@
 package github.fonvind.immersive2d.client.rendering;
 
 import github.fonvind.immersive2d.client.Immersive2DClient;
+import github.fonvind.immersive2d.client.access.MouseNormalizedGetter;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.Mouse;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.util.Identifier;
 
@@ -13,22 +13,23 @@ public class Immersive2DCrosshairRenderer {
 
     public static void initialize() {
         HudRenderCallback.EVENT.register(((drawContext, renderTickCounter) -> {
-
-            // Only draw when your mod wants a 2D crosshair
-            if (Immersive2DClient.plane == null)
-                return;
+            if (Immersive2DClient.plane == null) return;
 
             MinecraftClient client = MinecraftClient.getInstance();
-            Mouse mouse = client.mouse;
+
+            // Use the normalized mouse getter we added to the Mouse mixin
+            MouseNormalizedGetter mouseGetter = (MouseNormalizedGetter) client.mouse;
 
             int scaledWidth = drawContext.getScaledWindowWidth();
             int scaledHeight = drawContext.getScaledWindowHeight();
 
-            // Convert raw mouse coords → scaled GUI coordinates
-            double mouseX = mouse.getX() * (double) scaledWidth / client.getWindow().getWidth();
-            double mouseY = mouse.getY() * (double) scaledHeight / client.getWindow().getHeight();
+            // Convert normalized center-based coords back to scaled GUI pixels
+            double normX = mouseGetter.immersive2d$getNormalizedX(); // -1..1 where -1 => left edge, 1 => right edge
+            double normY = mouseGetter.immersive2d$getNormalizedY(); // -1..1 where -1 => top, 1 => bottom
 
-            // Draw your crosshair at the cursor
+            double mouseX = (scaledWidth / 2.0) - (normX * (scaledWidth / 2.0));
+            double mouseY = (scaledHeight / 2.0) - (normY * (scaledHeight / 2.0));
+
             drawContext.drawGuiTexture(
                     CROSSHAIR_TEXTURE,
                     (int) mouseX - 8,

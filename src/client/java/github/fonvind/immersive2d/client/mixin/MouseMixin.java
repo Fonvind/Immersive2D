@@ -26,14 +26,13 @@ public abstract class MouseMixin implements MouseNormalizedGetter, MouseForceUpd
 
     @Shadow public abstract void onCursorPos(long window, double x, double y);
 
-    @Unique
-    private double immersive2d$normalizedX = 0.0;
-    @Unique
-    private double immersive2d$normalizedY = 0.0;
-    @Unique
-    private double immersive2d$lastX = 0.0;
-    @Unique
-    private double immersive2d$lastY = 0.0;
+    @Unique private double immersive2d$normalizedX = 0.0;
+    @Unique private double immersive2d$normalizedY = 0.0;
+    @Unique private double immersive2d$lastX = 0.0;
+    @Unique private double immersive2d$lastY = 0.0;
+
+    @Unique private double immersive2d$preUIScreenX = 0.0;
+    @Unique private double immersive2d$preUIScreenY = 0.0;
 
     @Inject(method = "onCursorPos", at = @At("HEAD"))
     private void immersive2d$trackAndClampCursorPos(long window, double xpos, double ypos, CallbackInfo ci) {
@@ -60,14 +59,10 @@ public abstract class MouseMixin implements MouseNormalizedGetter, MouseForceUpd
     }
 
     @Override
-    public double immersive2d$getNormalizedX() {
-        return immersive2d$normalizedX;
-    }
+    public double immersive2d$getNormalizedX() { return immersive2d$normalizedX; }
 
     @Override
-    public double immersive2d$getNormalizedY() {
-        return immersive2d$normalizedY;
-    }
+    public double immersive2d$getNormalizedY() { return immersive2d$normalizedY; }
 
     @WrapWithCondition(
             method = "lockCursor",
@@ -104,15 +99,11 @@ public abstract class MouseMixin implements MouseNormalizedGetter, MouseForceUpd
 
     @Unique
     @Override
-    public double immersive2d$getLastX() {
-        return this.immersive2d$lastX;
-    }
+    public double immersive2d$getLastX() { return this.immersive2d$lastX; }
 
     @Unique
     @Override
-    public double immersive2d$getLastY() {
-        return this.immersive2d$lastY;
-    }
+    public double immersive2d$getLastY() { return this.immersive2d$lastY; }
 
     @Unique
     @Override
@@ -127,5 +118,20 @@ public abstract class MouseMixin implements MouseNormalizedGetter, MouseForceUpd
     public void immersive2d$forceInternalCursorUpdate() {
         long handle = this.client.getWindow().getHandle();
         this.onCursorPos(handle, this.immersive2d$getLastX(), this.immersive2d$getLastY());
+    }
+
+    // Pre-UI snapshot methods
+    @Override
+    public void immersive2d$storePreUIScreenPosition() {
+        immersive2d$preUIScreenX = immersive2d$lastX;
+        immersive2d$preUIScreenY = immersive2d$lastY;
+    }
+
+    @Override
+    public void immersive2d$restorePreUIScreenPosition() {
+        this.immersive2d$lastX = immersive2d$preUIScreenX;
+        this.immersive2d$lastY = immersive2d$preUIScreenY;
+        immersive2d$forceInternalCursorUpdate();
+        immersive2d$forceNormalizedUpdate();
     }
 }

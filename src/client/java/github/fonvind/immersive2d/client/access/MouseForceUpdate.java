@@ -6,4 +6,8 @@ public interface MouseForceUpdate {
     double immersive2d$getLastX();
     double immersive2d$getLastY();
     void immersive2d$forceInternalCursorUpdate();
+
+    // Pre-UI snapshot
+    void immersive2d$storePreUIScreenPosition();
+    void immersive2d$restorePreUIScreenPosition();
 }

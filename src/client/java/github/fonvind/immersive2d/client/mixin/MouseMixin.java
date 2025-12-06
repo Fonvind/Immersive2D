@@ -36,7 +36,8 @@ public abstract class MouseMixin implements MouseNormalizedGetter, MouseForceUpd
 
     @Inject(method = "onCursorPos", at = @At("HEAD"))
     private void immersive2d$trackAndClampCursorPos(long window, double xpos, double ypos, CallbackInfo ci) {
-        if (Immersive2DClient.plane != null) {
+        // Only clamp during gameplay, not when a screen (GUI) is open
+        if (Immersive2DClient.plane != null && client.currentScreen == null) {
             double windowW = this.client.getWindow().getWidth();
             double windowH = this.client.getWindow().getHeight();
 

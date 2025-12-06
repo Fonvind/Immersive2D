@@ -12,12 +12,13 @@
     "EntityMixin",
     "FluidRendererMixin",
     "GameOptionsMixin",
-    "InputMixin",
-    "MouseMixin",
-    "TerrainRenderContextMixin",
-    "WorldRendererMixin",
     "GameRendererMixin",
-    "MinecraftClientMixin"
+    "InputMixin",
+    "MinecraftClientMixin",
+    "MouseMixin",
+    "ProjectileEntityMixin",
+    "TerrainRenderContextMixin",
+    "WorldRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

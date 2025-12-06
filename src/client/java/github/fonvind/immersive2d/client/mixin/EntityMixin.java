@@ -1,9 +1,11 @@
 package github.fonvind.immersive2d.client.mixin;
 
 import github.fonvind.immersive2d.client.Immersive2DClient;
+import github.fonvind.immersive2d.client.access.CameraScaleAccessor;
 import github.fonvind.immersive2d.utils.Plane;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
+import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
@@ -95,7 +97,13 @@ public abstract class EntityMixin {
         double mouseXFromCenter = mouse.getX() - (windowWidth / 2.0);
         double mouseYFromCenter = mouse.getY() - (windowHeight / 2.0);
 
-        double processedMouseX = mouseXFromCenter / (aimingSquareSize / 2.0);
+        Camera camera = MinecraftClient.getInstance().gameRenderer.getCamera();
+        float scale = ((CameraScaleAccessor) camera).immersive2d$getCurrentScale();
+
+        double processedMouseX =
+                (mouseXFromCenter / (aimingSquareSize / 2.0))
+                        * Math.sqrt(scale);
+
         double processedMouseY = mouseYFromCenter / (aimingSquareSize / 2.0);
 
         // FOV compensation

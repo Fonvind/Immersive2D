@@ -35,8 +35,8 @@ public abstract class EntityMixin {
             this.prevYaw = this.getYaw();
 
             // --- TUNING PARAMETERS ---
-            final float maxPitchAngle = 75.0F; // Max angle player can look up/down
-            final float maxYawAngle = 75.0F;   // Max angle player can turn left/right from center
+            final float maxPitchAngle = 80.0F; // Max angle player can look up/down
+            final float maxYawAngle = 80.0F;   // Max angle player can turn left/right from center
             final double aimingSquarePercentage = 0.8; // Use 1.0 for 100%, 0.7 for 70%, etc.
             final double baseSensitivity = 1.0; // Adjusts overall sensitivity. 1.1 = 10% more, 0.9 = 10% less.
             // --- END TUNING PARAMETERS ---

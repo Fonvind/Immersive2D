@@ -18,11 +18,13 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Mouse.class)
-public class MouseMixin implements MouseNormalizedGetter, MouseForceUpdate {
+public abstract class MouseMixin implements MouseNormalizedGetter, MouseForceUpdate {
 
     @Shadow @Final private MinecraftClient client;
     @Shadow private double x;
     @Shadow private double y;
+
+    @Shadow public abstract void onCursorPos(long window, double x, double y);
 
     @Unique
     private double immersive2d$normalizedX = 0.0;
@@ -73,7 +75,6 @@ public class MouseMixin implements MouseNormalizedGetter, MouseForceUpdate {
     )
     private boolean immersive2d$overrideLockCursor(long handle, int mode, double x, double y) {
         if (Immersive2DClient.plane != null) {
-            // In gameplay (no UI): hide but DO NOT capture
             if (client.currentScreen == null)
                 InputUtil.setCursorParameters(handle, GLFW.GLFW_CURSOR_HIDDEN, 0, 0);
             return false;
@@ -87,7 +88,6 @@ public class MouseMixin implements MouseNormalizedGetter, MouseForceUpdate {
     )
     private boolean immersive2d$blockUnlockCursor(long handle, int mode, double x, double y) {
         if (Immersive2DClient.plane != null) {
-            // In UI (screen open): cursor must be visible and free
             if (client.currentScreen != null)
                 InputUtil.setCursorParameters(handle, GLFW.GLFW_CURSOR_NORMAL, 0, 0);
             return false;
@@ -108,8 +108,6 @@ public class MouseMixin implements MouseNormalizedGetter, MouseForceUpdate {
         return this.immersive2d$lastX;
     }
 
-
-
     @Unique
     @Override
     public double immersive2d$getLastY() {
@@ -121,15 +119,13 @@ public class MouseMixin implements MouseNormalizedGetter, MouseForceUpdate {
     public void immersive2d$forceNormalizedUpdate() {
         this.x = this.immersive2d$lastX;
         this.y = this.immersive2d$lastY;
+        this.immersive2d$normalize(null);
+    }
 
-        double windowW = this.client.getWindow().getWidth();
-        double windowH = this.client.getWindow().getHeight();
-        this.x = MathHelper.clamp(this.x, 0.0, windowW);
-        this.y = MathHelper.clamp(this.y, 0.0, windowH);
-
-        double halfW = windowW / 2.0;
-        double halfH = windowH / 2.0;
-        immersive2d$normalizedX = (halfW - this.x) / halfW;
-        immersive2d$normalizedY = (halfH - this.y) / halfH;
+    @Unique
+    @Override
+    public void immersive2d$forceInternalCursorUpdate() {
+        long handle = this.client.getWindow().getHandle();
+        this.onCursorPos(handle, this.immersive2d$getLastX(), this.immersive2d$getLastY());
     }
 }

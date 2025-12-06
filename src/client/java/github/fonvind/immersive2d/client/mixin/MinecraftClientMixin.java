@@ -22,12 +22,10 @@ public abstract class MinecraftClientMixin {
     @Shadow @Final public Mouse mouse;
     @Shadow public Screen currentScreen;
 
-    // Run *before* the engine actually changes the screen to snapshot the hardware cursor position.
     @Inject(method = "setScreen", at = @At("HEAD"))
     private void immersive2d$beforeSetScreen(Screen screen, CallbackInfo ci) {
         if (Immersive2DClient.plane == null) return;
 
-        // If a screen is being opened (the new screen is not null), snapshot the hardware cursor pos.
         if (screen != null) {
             long handle = MinecraftClient.getInstance().getWindow().getHandle();
             try (MemoryStack stack = MemoryStack.stackPush()) {
@@ -41,26 +39,25 @@ public abstract class MinecraftClientMixin {
         }
     }
 
-    // Run *after* the engine has changed the screen to restore positions.
     @Inject(method = "setScreen", at = @At("TAIL"))
     private void immersive2d$afterSetScreen(Screen newScreen, CallbackInfo ci) {
         if (Immersive2DClient.plane == null) return;
 
         if (this.mouse instanceof MouseForceUpdate mfu) {
             long handle = MinecraftClient.getInstance().getWindow().getHandle();
+            double lx = mfu.immersive2d$getLastX();
+            double ly = mfu.immersive2d$getLastY();
 
-            // A UI is being opened
             if (newScreen != null) {
-                // Restore the hardware cursor to our saved position, AFTER Minecraft's own resets.
-                GLFW.glfwSetCursorPos(handle, mfu.immersive2d$getLastX(), mfu.immersive2d$getLastY());
-                // Ensure the cursor is visible for the UI.
-                InputUtil.setCursorParameters(handle, GLFW.GLFW_CURSOR_NORMAL, 0, 0);
-            }
-            // A UI was just closed
-            else {
-                // Restore the hardware cursor position to our stored value.
-                GLFW.glfwSetCursorPos(handle, mfu.immersive2d$getLastX(), mfu.immersive2d$getLastY());
-                // Force our mixin to recompute its internal state immediately.
+                // Restore cursor to the last known position
+                GLFW.glfwSetCursorPos(handle, lx, ly);
+                mfu.immersive2d$forceInternalCursorUpdate();
+
+                // Don't move the cursor to 0,0 — use the restored coordinates
+                InputUtil.setCursorParameters(handle, GLFW.GLFW_CURSOR_NORMAL, lx, ly);
+            } else {
+                GLFW.glfwSetCursorPos(handle, lx, ly);
+                mfu.immersive2d$forceInternalCursorUpdate();
                 mfu.immersive2d$forceNormalizedUpdate();
             }
         }

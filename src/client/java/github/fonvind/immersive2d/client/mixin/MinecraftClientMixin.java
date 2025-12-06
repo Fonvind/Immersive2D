@@ -22,44 +22,46 @@ public abstract class MinecraftClientMixin {
     @Shadow @Final public Mouse mouse;
     @Shadow public Screen currentScreen;
 
+    // Run *before* the engine actually changes the screen to snapshot the hardware cursor position.
     @Inject(method = "setScreen", at = @At("HEAD"))
     private void immersive2d$beforeSetScreen(Screen screen, CallbackInfo ci) {
         if (Immersive2DClient.plane == null) return;
 
-        if (screen != null) { // A UI is being opened
+        // If a screen is being opened (the new screen is not null), snapshot the hardware cursor pos.
+        if (screen != null) {
             long handle = MinecraftClient.getInstance().getWindow().getHandle();
             try (MemoryStack stack = MemoryStack.stackPush()) {
                 DoubleBuffer xb = stack.mallocDouble(1);
                 DoubleBuffer yb = stack.mallocDouble(1);
                 GLFW.glfwGetCursorPos(handle, xb, yb);
-                double hx = xb.get(0);
-                double hy = yb.get(0);
-
                 if (this.mouse instanceof MouseForceUpdate setter) {
-                    setter.immersive2d$setLastPosition(hx, hy);
+                    setter.immersive2d$setLastPosition(xb.get(0), yb.get(0));
                 }
-
-                // Immediately restore the cursor to this position and make it visible for the UI.
-                InputUtil.setCursorParameters(handle, GLFW.GLFW_CURSOR_NORMAL, hx, hy);
             }
         }
     }
 
+    // Run *after* the engine has changed the screen to restore positions.
     @Inject(method = "setScreen", at = @At("TAIL"))
-    private void immersive2d$afterSetScreen(Screen screen, CallbackInfo ci) {
+    private void immersive2d$afterSetScreen(Screen newScreen, CallbackInfo ci) {
         if (Immersive2DClient.plane == null) return;
 
-        if (screen == null) { // A UI was just closed
-            if (this.mouse instanceof MouseForceUpdate getter) {
-                double lx = getter.immersive2d$getLastX();
-                double ly = getter.immersive2d$getLastY();
-                long handle = MinecraftClient.getInstance().getWindow().getHandle();
+        if (this.mouse instanceof MouseForceUpdate mfu) {
+            long handle = MinecraftClient.getInstance().getWindow().getHandle();
 
-                // Restore the hardware cursor position to our stored value
-                GLFW.glfwSetCursorPos(handle, lx, ly);
-
-                // Force the mixin to recompute normalized coords immediately
-                getter.immersive2d$forceNormalizedUpdate();
+            // A UI is being opened
+            if (newScreen != null) {
+                // Restore the hardware cursor to our saved position, AFTER Minecraft's own resets.
+                GLFW.glfwSetCursorPos(handle, mfu.immersive2d$getLastX(), mfu.immersive2d$getLastY());
+                // Ensure the cursor is visible for the UI.
+                InputUtil.setCursorParameters(handle, GLFW.GLFW_CURSOR_NORMAL, 0, 0);
+            }
+            // A UI was just closed
+            else {
+                // Restore the hardware cursor position to our stored value.
+                GLFW.glfwSetCursorPos(handle, mfu.immersive2d$getLastX(), mfu.immersive2d$getLastY());
+                // Force our mixin to recompute its internal state immediately.
+                mfu.immersive2d$forceNormalizedUpdate();
             }
         }
     }
